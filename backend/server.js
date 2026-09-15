@@ -11,18 +11,21 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// ── Middleware ──────────────────────────────────
+app.use(cors());           // Allow requests from any origin
+app.use(express.json());   // Parse JSON request bodies
 
-// Test route
+// ── Test route ──────────────────────────────────
 app.get('/', (req, res) => {
   res.send('Backend is running! 🚀');
 });
 
-// Student routes — all routes in routes/students.js will be prefixed with /students
-app.use(cors()); // Allows all origins (fine for a student project)
+// ── Student routes ──────────────────────────────
+// 👇 THIS LINE WAS MISSING — it registers all routes from students.js
+app.use('/students', studentRoutes);
 
-const PORT = 5000;
+// ── Start server ────────────────────────────────
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
