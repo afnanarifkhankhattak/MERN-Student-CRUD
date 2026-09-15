@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-const API_URL = 'http://localhost:5000/students';
+const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
 function StudentTable({ refreshTrigger, onEdit, onDelete }) {
   const [students, setStudents] = useState([]);

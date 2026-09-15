@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const API_URL = 'http://localhost:5000/students';
+const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
 const EMPTY_FORM = {
   username: '',

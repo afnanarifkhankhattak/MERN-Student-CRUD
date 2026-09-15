@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
 });
 
 // Student routes — all routes in routes/students.js will be prefixed with /students
-app.use('/students', studentRoutes);
+app.use(cors()); // Allows all origins (fine for a student project)
 
 const PORT = 5000;
 app.listen(PORT, () => {
