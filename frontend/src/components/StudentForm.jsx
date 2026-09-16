@@ -12,8 +12,8 @@ const EMPTY_FORM = {
   phone: '',
   age: '',
   email: '',
-//   department: '',
-//   semester: '',
+  department: '',
+  semester: '',
 };
 
 // ── Options for our dropdowns ────────────────────
