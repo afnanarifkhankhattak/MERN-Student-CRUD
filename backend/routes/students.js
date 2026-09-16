@@ -25,6 +25,54 @@ router.post('/', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
+// BULK CREATE — Add many students at once (used by CSV upload)
+// POST /students/bulk
+// ⚠️ IMPORTANT: this MUST come BEFORE any /:id routes
+// ─────────────────────────────────────────────
+router.post('/bulk', async (req, res) => {
+  try {
+    const { students } = req.body;
+
+    if (!Array.isArray(students) || students.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No students provided. Send an array in the "students" field.',
+      });
+    }
+
+    const inserted = [];
+    const failed = [];
+
+    for (let i = 0; i < students.length; i++) {
+      const row = students[i];
+      try {
+        const created = await Student.create(row);
+        inserted.push(created);
+      } catch (err) {
+        failed.push({
+          row: i + 1,
+          regNo: row.regNo || '(missing)',
+          reason: err.message,
+        });
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      insertedCount: inserted.length,
+      failedCount: failed.length,
+      inserted,
+      failed,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// ─────────────────────────────────────────────
 // READ ALL — Get every student
 // GET /students
 // ─────────────────────────────────────────────
@@ -47,6 +95,7 @@ router.get('/', async (req, res) => {
 // ─────────────────────────────────────────────
 // READ ONE — Get a single student by id
 // GET /students/:id
+// ⚠️ This is a wildcard. It must come AFTER specific routes.
 // ─────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
