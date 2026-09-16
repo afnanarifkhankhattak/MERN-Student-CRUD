@@ -16,9 +16,18 @@ const EMPTY_FORM = {
   semester: '',
 };
 
+// ── Options for our dropdowns ────────────────────
+const DEPARTMENTS = [
+  'Computer Science',
+  'Software Engineering',
+  'Information Technology',
+  'Physics',
+  'Chemistry',
+];
+
+const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
+
 // ── Validation rules ────────────────────────────
-// Each function receives a value and returns an error message,
-// OR an empty string if the value is valid.
 const validators = {
   username: (v) => {
     if (!v.trim()) return 'Username is required';
@@ -37,7 +46,6 @@ const validators = {
     return '';
   },
   picture: (v) => {
-    // Optional — only validate format IF filled in
     if (v.trim() && !/^https?:\/\/.+/i.test(v)) {
       return 'Picture must be a valid URL (starting with http:// or https://)';
     }
@@ -45,7 +53,6 @@ const validators = {
   },
   phone: (v) => {
     if (!v.trim()) return 'Phone number is required';
-    // digits only, 10 to 15
     if (!/^\d{10,15}$/.test(v)) {
       return 'Phone must be 10–15 digits (no spaces, dashes, or letters)';
     }
@@ -61,7 +68,6 @@ const validators = {
   },
   email: (v) => {
     if (!v.trim()) return 'Email is required';
-    // simple email regex — good enough for a beginner project
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
       return 'Enter a valid email like name@example.com';
     }
@@ -76,7 +82,7 @@ const validators = {
     const num = Number(v);
     if (Number.isNaN(num)) return 'Semester must be a number';
     if (num < 1) return 'Semester must be at least 1';
-    if (num > 12) return 'Semester must be at most 12';
+    if (num > 8) return 'Semester must be at most 8';
     return '';
   },
 };
@@ -88,7 +94,7 @@ function StudentForm({
   onCancelEdit,
 }) {
   const [formData, setFormData] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({}); // fieldName -> error message
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -121,13 +127,12 @@ function StudentForm({
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Live-validate: if there was an error for this field, re-check it
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: validators[name](value) }));
     }
   };
 
-  // ── On blur (when user leaves a field) → validate ──
+  // ── On blur ─────────────────────────────────────
   const handleBlur = (e) => {
     const { name, value } = e.target;
     setErrors((prev) => ({ ...prev, [name]: validators[name](value) }));
@@ -141,7 +146,7 @@ function StudentForm({
       if (error) newErrors[field] = error;
     });
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // true if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   // ── Reset form ──────────────────────────────────
@@ -155,7 +160,6 @@ function StudentForm({
     e.preventDefault();
     setMessage({ type: '', text: '' });
 
-    // 1) Client-side validation
     const isValid = validateAll();
     if (!isValid) {
       setMessage({
@@ -372,39 +376,51 @@ function StudentForm({
           </div>
         </div>
 
-        {/* Row 5: Department + Semester */}
+        {/* Row 5: Department (dropdown) + Semester (dropdown) */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>Department *</label>
-            <input
-              type="text"
+            <select
               name="department"
               value={formData.department}
               onChange={handleChange}
               onBlur={handleBlur}
-              placeholder="e.g. Computer Science"
               style={{
                 ...styles.input,
+                ...styles.select,
                 ...(errors.department ? styles.inputError : {}),
               }}
-            />
+            >
+              <option value="">-- Select Department --</option>
+              {DEPARTMENTS.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select>
             {renderError('department')}
           </div>
 
           <div style={styles.field}>
             <label style={styles.label}>Semester *</label>
-            <input
-              type="number"
+            <select
               name="semester"
               value={formData.semester}
               onChange={handleChange}
               onBlur={handleBlur}
-              placeholder="e.g. 4"
               style={{
                 ...styles.input,
+                ...styles.select,
                 ...(errors.semester ? styles.inputError : {}),
               }}
-            />
+            >
+              <option value="">-- Select Semester --</option>
+              {SEMESTERS.map((sem) => (
+                <option key={sem} value={sem}>
+                  Semester {sem}
+                </option>
+              ))}
+            </select>
             {renderError('semester')}
           </div>
         </div>
@@ -492,6 +508,12 @@ const styles = {
     border: '1px solid #ccc',
     borderRadius: '4px',
     fontSize: '14px',
+    fontFamily: 'Arial, sans-serif',
+    backgroundColor: '#fff',
+  },
+  select: {
+    cursor: 'pointer',
+    appearance: 'auto',
   },
   inputError: {
     border: '1px solid #dc3545',
