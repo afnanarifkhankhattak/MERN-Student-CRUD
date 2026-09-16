@@ -4,7 +4,7 @@ import { useState } from 'react';
 import StudentForm from './components/StudentForm';
 import StudentTable from './components/StudentTable';
 
-const API_URL = 'http://localhost:5000/students';
+const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
 function App() {
   // Refresh trigger: bumping this number tells StudentTable to re-fetch
