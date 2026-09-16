@@ -163,7 +163,7 @@ function UploadCSV({ onUploadComplete }) {
           cursor: uploading ? 'not-allowed' : 'pointer',
         }}
       >
-        {uploading ? '⏳ Uploading...' : '📁 Upload CSV'}
+        {uploading ? 'Uploading...' : 'Upload CSV'}
       </button>
 
       {status.text && (
