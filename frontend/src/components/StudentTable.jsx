@@ -1,13 +1,23 @@
 // frontend/src/components/StudentTable.jsx
 
 import { useEffect, useState } from 'react';
+import UploadCSV from './UploadCSV';
 
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
-function StudentTable({ refreshTrigger, onEdit, onDelete }) {
+const STUDENTS_PER_PAGE = 10;
+
+function StudentTable({
+  refreshTrigger,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  onUploadComplete,
+}) {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // ── Fetch all students from the backend ─────────
   const fetchStudents = async () => {
@@ -21,7 +31,7 @@ function StudentTable({ refreshTrigger, onEdit, onDelete }) {
         throw new Error(data.message || 'Failed to fetch students');
       }
 
-      setStudents(data.data);   // data.data = the array of students
+      setStudents(data.data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -34,6 +44,22 @@ function StudentTable({ refreshTrigger, onEdit, onDelete }) {
     fetchStudents();
   }, [refreshTrigger]);
 
+  // ── Auto-fix currentPage if it goes out of range ─
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(students.length / STUDENTS_PER_PAGE));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [students, currentPage]);
+
+  // ── Compute the page slice ──────────────────────
+  const totalPages = Math.max(1, Math.ceil(students.length / STUDENTS_PER_PAGE));
+  const startIndex = (currentPage - 1) * STUDENTS_PER_PAGE;
+  const currentStudents = students.slice(
+    startIndex,
+    startIndex + STUDENTS_PER_PAGE
+  );
+
   // ── Render ──────────────────────────────────────
   if (loading) {
     return <p style={styles.info}>Loading students...</p>;
@@ -43,76 +69,137 @@ function StudentTable({ refreshTrigger, onEdit, onDelete }) {
     return <p style={styles.error}>Error: {error}</p>;
   }
 
-  if (students.length === 0) {
-    return <p style={styles.info}>No students yet. Add one above! 👆</p>;
-  }
-
   return (
     <div style={styles.container}>
       <h2 style={styles.heading}>All Students</h2>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table style={styles.table}>
-          <thead>
-            <tr style={styles.headerRow}>
-              <th style={styles.th}>#</th>
-              <th style={styles.th}>Picture</th>
-              <th style={styles.th}>Username</th>
-              <th style={styles.th}>Reg No</th>
-              <th style={styles.th}>Name</th>
-              <th style={styles.th}>Phone</th>
-              <th style={styles.th}>Age</th>
-              <th style={styles.th}>Email</th>
-              <th style={styles.th}>Department</th>
-              <th style={styles.th}>Semester</th>
-              <th style={styles.th}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student, index) => (
-              <tr key={student._id} style={styles.bodyRow}>
-                <td style={styles.td}>{index + 1}</td>
+      {/* Upload CSV button (always visible, even if table is empty) */}
+      <UploadCSV onUploadComplete={onUploadComplete} />
 
-                <td style={styles.td}>
-                  <img
-                    src={student.picture}
-                    alt={student.name}
-                    style={styles.img}
-                    onError={(e) => {
-                      e.target.src =
-                        'https://via.placeholder.com/50?text=?';
-                    }}
-                  />
-                </td>
+      {students.length === 0 ? (
+        <p style={styles.info}>No students yet. Add one above! 👆</p>
+      ) : (
+        <>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={styles.table}>
+              <thead>
+                <tr style={styles.headerRow}>
+                  <th style={styles.th}>#</th>
+                  <th style={styles.th}>Picture</th>
+                  <th style={styles.th}>Username</th>
+                  <th style={styles.th}>Reg No</th>
+                  <th style={styles.th}>Name</th>
+                  <th style={styles.th}>Phone</th>
+                  <th style={styles.th}>Age</th>
+                  <th style={styles.th}>Email</th>
+                  <th style={styles.th}>Department</th>
+                  <th style={styles.th}>Semester</th>
+                  <th style={styles.th}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentStudents.map((student, i) => (
+                  <tr key={student._id} style={styles.bodyRow}>
+                    <td style={styles.td}>{startIndex + i + 1}</td>
 
-                <td style={styles.td}>{student.username}</td>
-                <td style={styles.td}>{student.regNo}</td>
-                <td style={styles.td}>{student.name}</td>
-                <td style={styles.td}>{student.phone}</td>
-                <td style={styles.td}>{student.age}</td>
-                <td style={styles.td}>{student.email}</td>
-                <td style={styles.td}>{student.department}</td>
-                <td style={styles.td}>{student.semester}</td>
+                    <td style={styles.td}>
+                      <img
+                        src={student.picture}
+                        alt={student.name}
+                        style={styles.img}
+                        onError={(e) => {
+                          e.target.src =
+                            'https://via.placeholder.com/50?text=?';
+                        }}
+                      />
+                    </td>
 
-                <td style={styles.td}>
-                  <button
-                    style={{ ...styles.actionBtn, ...styles.editBtn }}
-                    onClick={() => onEdit(student)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    style={{ ...styles.actionBtn, ...styles.deleteBtn }}
-                    onClick={() => onDelete(student)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
+                    <td style={styles.td}>{student.username}</td>
+                    <td style={styles.td}>{student.regNo}</td>
+                    <td style={styles.td}>{student.name}</td>
+                    <td style={styles.td}>{student.phone}</td>
+                    <td style={styles.td}>{student.age}</td>
+                    <td style={styles.td}>{student.email}</td>
+                    <td style={styles.td}>{student.department}</td>
+                    <td style={styles.td}>{student.semester}</td>
+
+                    <td style={styles.td}>
+                      <div style={styles.actionRow}>
+                        <button
+                          style={{ ...styles.actionBtn, ...styles.editBtn }}
+                          onClick={() => onEdit(student)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          style={{ ...styles.actionBtn, ...styles.deleteBtn }}
+                          onClick={() => onDelete(student)}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          style={{ ...styles.actionBtn, ...styles.duplicateBtn }}
+                          onClick={() => onDuplicate(student)}
+                        >
+                          Duplicate
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination controls */}
+          <div style={styles.pagination}>
+            <button
+              style={{
+                ...styles.pageBtn,
+                opacity: currentPage === 1 ? 0.5 : 1,
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              }}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              ← Previous
+            </button>
+
+            {/* Page number buttons */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                style={{
+                  ...styles.pageBtn,
+                  ...(page === currentPage ? styles.pageBtnActive : {}),
+                }}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
             ))}
-          </tbody>
-        </table>
-      </div>
+
+            <button
+              style={{
+                ...styles.pageBtn,
+                opacity: currentPage === totalPages ? 0.5 : 1,
+                cursor:
+                  currentPage === totalPages ? 'not-allowed' : 'pointer',
+              }}
+              onClick={() =>
+                setCurrentPage((p) => Math.min(totalPages, p + 1))
+              }
+              disabled={currentPage === totalPages}
+            >
+              Next →
+            </button>
+          </div>
+
+          <div style={styles.pageInfo}>
+            Showing {startIndex + 1}–{Math.min(startIndex + STUDENTS_PER_PAGE, students.length)} of {students.length} students
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -162,20 +249,58 @@ const styles = {
     borderRadius: '50%',
     border: '1px solid #ccc',
   },
+  actionRow: {
+    display: 'flex',
+    gap: '8px',       // ← nice spacing between the 3 buttons
+    flexWrap: 'wrap',
+  },
   actionBtn: {
     padding: '6px 12px',
     border: 'none',
     borderRadius: '4px',
     color: 'white',
     cursor: 'pointer',
-    marginRight: '5px',
     fontSize: '13px',
+    fontWeight: 'bold',
   },
   editBtn: {
     backgroundColor: '#28a745',
   },
   deleteBtn: {
     backgroundColor: '#dc3545',
+  },
+  duplicateBtn: {
+    backgroundColor: '#17a2b8',
+  },
+  pagination: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '6px',
+    marginTop: '20px',
+    flexWrap: 'wrap',
+  },
+  pageBtn: {
+    padding: '8px 14px',
+    border: '1px solid #ccc',
+    borderRadius: '6px',
+    backgroundColor: '#fff',
+    color: '#333',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 'bold',
+    transition: 'background-color 0.15s ease, transform 0.1s ease',
+  },
+  pageBtnActive: {
+    backgroundColor: '#007bff',
+    color: 'white',
+    borderColor: '#007bff',
+  },
+  pageInfo: {
+    textAlign: 'center',
+    marginTop: '10px',
+    color: '#666',
+    fontSize: '13px',
   },
   info: {
     textAlign: 'center',

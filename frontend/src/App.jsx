@@ -7,13 +7,8 @@ import StudentTable from './components/StudentTable';
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
 function App() {
-  // Refresh trigger: bumping this number tells StudentTable to re-fetch
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Currently-edited student (null = we're in "create" mode)
   const [editingStudent, setEditingStudent] = useState(null);
-
-  // Global toast message (for delete success/error)
   const [toast, setToast] = useState({ type: '', text: '' });
 
   // ── Create flow ────────────────────────────────
@@ -40,29 +35,24 @@ function App() {
 
   // ── Delete flow ────────────────────────────────
   const handleDelete = async (student) => {
-    // 1. Ask the user for confirmation
     const confirmed = window.confirm(
       `Are you sure you want to delete "${student.name}" (${student.username})?\n\nThis cannot be undone.`
     );
     if (!confirmed) return;
 
-    // 2. Send DELETE to backend
     try {
       const response = await fetch(`${API_URL}/${student._id}`, {
         method: 'DELETE',
       });
-
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to delete student');
       }
 
-      // 3. Refresh the table
       setRefreshTrigger((prev) => prev + 1);
       showToast('success', `Deleted "${student.name}" successfully. ✅`);
 
-      // 4. If we were editing THIS student, exit edit mode
       if (editingStudent && editingStudent._id === student._id) {
         setEditingStudent(null);
       }
@@ -71,13 +61,81 @@ function App() {
     }
   };
 
+  // ── Duplicate flow ─────────────────────────────
+  // Tries "-COPY", then "-COPY-2", "-COPY-3"... until a free slot is found.
+  const handleDuplicate = async (student) => {
+    // Fields we must make unique
+    const originalRegNo = student.regNo;
+    const originalUsername = student.username;
+
+    // We'll try up to 20 suffixes before giving up.
+    for (let attempt = 1; attempt <= 20; attempt++) {
+      const suffix = attempt === 1 ? '-COPY' : `-COPY-${attempt}`;
+
+      const payload = {
+        // Copy everything the original student has
+        username: `${originalUsername}${suffix}`,
+        regNo: `${originalRegNo}${suffix}`,
+        name: student.name,
+        picture: student.picture,
+        phone: student.phone,
+        age: student.age,
+        email: student.email,
+        department: student.department,
+        semester: student.semester,
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          // Success!
+          setRefreshTrigger((prev) => prev + 1);
+          showToast(
+            'success',
+            `Duplicated as "${payload.username}" ✅`
+          );
+          return;
+        }
+
+        // If the error is a duplicate-key error, try the next suffix.
+        // Otherwise stop and show the error.
+        if (data.message && data.message.includes('E11000')) {
+          continue; // try next suffix
+        }
+
+        throw new Error(data.message || 'Failed to duplicate student');
+      } catch (error) {
+        showToast('error', `Duplicate failed: ${error.message}`);
+        return;
+      }
+    }
+
+    showToast(
+      'error',
+      'Could not find a free "-COPY" name after 20 attempts.'
+    );
+  };
+
+  // ── Upload CSV complete ────────────────────────
+  const handleBulkUploadComplete = (count) => {
+    setRefreshTrigger((prev) => prev + 1);
+    if (count && count > 0) {
+      showToast('success', `${count} student(s) imported ✅`);
+    }
+  };
+
   // ── Toast helper ───────────────────────────────
   const showToast = (type, text) => {
     setToast({ type, text });
-    // Auto-hide after 3 seconds
     setTimeout(() => {
       setToast({ type: '', text: '' });
-    }, 3000);
+    }, 3500);
   };
 
   // ── Render ─────────────────────────────────────
@@ -87,7 +145,6 @@ function App() {
         Student CRUD Application
       </h1>
 
-      {/* Toast message (fixed at top-right) */}
       {toast.text && (
         <div
           style={{
@@ -122,6 +179,8 @@ function App() {
         refreshTrigger={refreshTrigger}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onDuplicate={handleDuplicate}
+        onUploadComplete={handleBulkUploadComplete}
       />
     </div>
   );
