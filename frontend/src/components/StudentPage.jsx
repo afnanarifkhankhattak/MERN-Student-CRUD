@@ -13,7 +13,7 @@ function StudentPage({ username, onLogout }) {
   return (
     <div style={{ padding: '20px' }}>
       <div style={styles.topBar}>
-        <span style={styles.welcome}>👨‍🎓 Welcome, {username}</span>
+        <span style={styles.welcome}> Welcome, {username}</span>
         <button style={styles.logoutBtn} onClick={onLogout}>
           Logout
         </button>

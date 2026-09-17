@@ -114,7 +114,7 @@ function AdminPage({ username, onLogout }) {
     <div style={{ padding: '20px' }}>
       {/* Top bar */}
       <div style={styles.topBar}>
-        <span style={styles.welcome}>👨‍💼 Welcome, {username} (Admin)</span>
+        <span style={styles.welcome}> Welcome, {username} (Admin)</span>
         <button style={styles.logoutBtn} onClick={onLogout}>
           Logout
         </button>

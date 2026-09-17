@@ -228,7 +228,7 @@ function StudentForm({
   return (
     <div style={styles.container}>
       <h2 style={styles.heading}>
-        {isEditMode ? '✏️ Edit Student' : 'Add New Student'}
+        {isEditMode ? ' Edit Student' : 'Add New Student'}
       </h2>
 
       {message.text && (

@@ -81,7 +81,7 @@ function StudentTable({
       <UploadCSV onUploadComplete={onUploadComplete} />
 
       {students.length === 0 ? (
-        <p style={styles.info}>No students yet. Add one above! 👆</p>
+        <p style={styles.info}>No students yet. Add one above! </p>
       ) : (
         <>
           <div style={{ overflowX: 'auto' }}>
