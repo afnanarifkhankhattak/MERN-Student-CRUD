@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import LoginPage from './components/LoginPage';
+import SignUpPage from './components/SignUpPage';
 import StudentPage from './components/StudentPage';
 import AdminPage from './components/AdminPage';
 import { getToken, getStoredUser, clearToken, clearStoredUser } from './api';
@@ -9,9 +10,11 @@ import { getToken, getStoredUser, clearToken, clearStoredUser } from './api';
 function App() {
   // Read auth from localStorage on first render
   const [user, setUser] = useState(() => {
-    // Only trust the user object if we ALSO have a token
     return getToken() ? getStoredUser() : null;
   });
+
+  // Which auth screen to show when not logged in
+  const [authView, setAuthView] = useState('login'); // 'login' | 'signup'
 
   const handleLoginSuccess = (loggedInUser) => {
     setUser(loggedInUser);
@@ -21,11 +24,20 @@ function App() {
     clearToken();
     clearStoredUser();
     setUser(null);
+    setAuthView('login');
   };
 
   // ── Route selection ─────────────────────────────
   if (!user) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    if (authView === 'signup') {
+      return <SignUpPage onGoToLogin={() => setAuthView('login')} />;
+    }
+    return (
+      <LoginPage
+        onLoginSuccess={handleLoginSuccess}
+        onGoToSignUp={() => setAuthView('signup')}
+      />
+    );
   }
 
   if (user.role === 'student') {
@@ -36,7 +48,13 @@ function App() {
     return <AdminPage username={user.username} onLogout={handleLogout} />;
   }
 
-  return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  // Fallback
+  return (
+    <LoginPage
+      onLoginSuccess={handleLoginSuccess}
+      onGoToSignUp={() => setAuthView('signup')}
+    />
+  );
 }
 
 export default App;

@@ -172,4 +172,25 @@
   .login-card {
     min-height: auto;
   }
+}.login-footer {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #1a3fa0;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.link-btn:hover {
+  color: #15327a;
 }

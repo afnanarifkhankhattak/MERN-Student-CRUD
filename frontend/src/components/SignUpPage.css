@@ -1,0 +1,45 @@
+/* frontend/src/components/SignUpPage.css */
+@import './LoginPage.css';
+/* Most styles are shared with LoginPage.css.
+   We reuse .login-wrapper, .login-card, .login-left,
+   .login-right, .login-input, .login-btn, .role-btn etc.
+   Only these three classes are new: */
+
+.login-success {
+  background-color: #e8f8ee;
+  color: #155724;
+  border: 1px solid #b7e4c7;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.login-footer {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #1a3fa0;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.link-btn:hover {
+  color: #15327a;
+}
+
+.link-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

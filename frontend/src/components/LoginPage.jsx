@@ -4,7 +4,7 @@ import { useState } from 'react';
 import './LoginPage.css';
 import { AUTH_URL, setToken, setStoredUser } from '../api';
 
-function LoginPage({ onLoginSuccess }) {
+function LoginPage({ onLoginSuccess, onGoToSignUp }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -125,13 +125,24 @@ function LoginPage({ onLoginSuccess }) {
             </button>
           </form>
 
-          <div className="login-hint">
-            <strong>Demo credentials</strong>
-            <br />
-            Student: <code>student</code> / <code>student123</code>
-            <br />
-            Admin: <code>admin</code> / <code>admin123</code>
-          </div>
+      <div className="login-hint">
+  <strong>Demo credentials</strong>
+  <br />
+  Student: <code>student</code> / <code>student123</code>
+  <br />
+  Admin: <code>admin</code> / <code>admin123</code>
+</div>
+
+<div className="login-footer">
+  Don't have an account?{' '}
+  <button
+    type="button"
+    className="link-btn"
+    onClick={onGoToSignUp}
+  >
+    Sign Up
+  </button>
+</div>
         </div>
       </div>
     </div>
