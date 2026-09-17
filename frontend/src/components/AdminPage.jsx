@@ -1,10 +1,15 @@
 // frontend/src/components/AdminPage.jsx
 
+// import { useState } from 'react';
+// import StudentForm from './StudentForm';
+// import StudentTable from './StudentTable';
+
+// const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
+
 import { useState } from 'react';
 import StudentForm from './StudentForm';
 import StudentTable from './StudentTable';
-
-const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
+import { STUDENTS_URL as API_URL, apiFetch } from '../api';
 
 function AdminPage({ username, onLogout }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -42,9 +47,9 @@ function AdminPage({ username, onLogout }) {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`${API_URL}/${student._id}`, {
-        method: 'DELETE',
-      });
+     const response = await apiFetch(`${API_URL}/${student._id}`, {
+  method: 'DELETE',
+});
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Delete failed');
 
@@ -77,11 +82,10 @@ function AdminPage({ username, onLogout }) {
       };
 
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+      const response = await apiFetch(API_URL, {
+  method: 'POST',
+  body: JSON.stringify(payload),
+});
         const data = await response.json();
 
         if (response.ok) {

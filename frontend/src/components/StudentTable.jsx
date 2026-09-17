@@ -1,9 +1,13 @@
 // frontend/src/components/StudentTable.jsx
 
+// import { useEffect, useState } from 'react';
+// import UploadCSV from './UploadCSV';
+
+// const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
+
 import { useEffect, useState } from 'react';
 import UploadCSV from './UploadCSV';
-
-const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
+import { STUDENTS_URL as API_URL, apiFetch } from '../api';
 
 const STUDENTS_PER_PAGE = 10;
 
@@ -24,7 +28,7 @@ function StudentTable({
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(API_URL);
+      const response = await apiFetch(API_URL);
       const data = await response.json();
 
       if (!response.ok) {

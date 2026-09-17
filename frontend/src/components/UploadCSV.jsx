@@ -1,9 +1,13 @@
 // frontend/src/components/UploadCSV.jsx
 
+// import { useRef, useState } from 'react';
+// import Papa from 'papaparse';
+
+// const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
+
 import { useRef, useState } from 'react';
 import Papa from 'papaparse';
-
-const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
+import { STUDENTS_URL as API_URL, apiFetch } from '../api';
 
 // These are the fields we expect each CSV row to provide.
 // "Picture" is optional.
@@ -113,11 +117,11 @@ function UploadCSV({ onUploadComplete }) {
 
     // 3. Send valid rows to the backend
     try {
-      const response = await fetch(`${API_URL}/bulk`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ students: validRows }),
-      });
+     const response = await apiFetch(`${API_URL}/bulk`, {
+  method: 'POST',
+  body: JSON.stringify({ students: validRows }),
+});
+
       const data = await response.json();
 
       if (!response.ok) {

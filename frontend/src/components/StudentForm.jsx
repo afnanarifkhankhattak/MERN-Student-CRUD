@@ -1,8 +1,11 @@
 // frontend/src/components/StudentForm.jsx
 
-import { useState, useEffect } from 'react';
+// import { useState, useEffect } from 'react';
 
-const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
+// const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
+
+import { useState, useEffect } from 'react';
+import { STUDENTS_URL as API_URL, apiFetch } from '../api';
 
 const EMPTY_FORM = {
   username: '',
@@ -177,11 +180,11 @@ function StudentForm({
         : API_URL;
       const method = isEditMode ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      const response = await apiFetch(url, {
+  method,
+  body: JSON.stringify(formData),
+});
+
       const data = await response.json();
 
       if (!response.ok) {

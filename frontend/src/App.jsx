@@ -1,55 +1,41 @@
 // frontend/src/App.jsx
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import LoginPage from './components/LoginPage';
 import StudentPage from './components/StudentPage';
 import AdminPage from './components/AdminPage';
+import { getToken, getStoredUser, clearToken, clearStoredUser } from './api';
 
 function App() {
-  // Read saved login from localStorage on first render
-  const [auth, setAuth] = useState(() => {
-    try {
-      const saved = localStorage.getItem('auth');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
+  // Read auth from localStorage on first render
+  const [user, setUser] = useState(() => {
+    // Only trust the user object if we ALSO have a token
+    return getToken() ? getStoredUser() : null;
   });
 
-  // Save auth to localStorage whenever it changes
-  useEffect(() => {
-    if (auth) {
-      localStorage.setItem('auth', JSON.stringify(auth));
-    } else {
-      localStorage.removeItem('auth');
-    }
-  }, [auth]);
-
-  const handleLoginSuccess = ({ role, username }) => {
-    setAuth({ role, username });
+  const handleLoginSuccess = (loggedInUser) => {
+    setUser(loggedInUser);
   };
 
   const handleLogout = () => {
-    setAuth(null);
+    clearToken();
+    clearStoredUser();
+    setUser(null);
   };
 
   // ── Route selection ─────────────────────────────
-  // No auth → login page
-  if (!auth) {
+  if (!user) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Student → student page
-  if (auth.role === 'student') {
-    return <StudentPage username={auth.username} onLogout={handleLogout} />;
+  if (user.role === 'student') {
+    return <StudentPage username={user.username} onLogout={handleLogout} />;
   }
 
-  // Admin → admin page
-  if (auth.role === 'admin') {
-    return <AdminPage username={auth.username} onLogout={handleLogout} />;
+  if (user.role === 'admin') {
+    return <AdminPage username={user.username} onLogout={handleLogout} />;
   }
 
-  // Fallback (should never happen)
   return <LoginPage onLoginSuccess={handleLoginSuccess} />;
 }
 

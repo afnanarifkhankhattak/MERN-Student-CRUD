@@ -12,7 +12,6 @@ function StudentPage({ username, onLogout }) {
 
   return (
     <div style={{ padding: '20px' }}>
-      {/* Top bar with welcome message and logout */}
       <div style={styles.topBar}>
         <span style={styles.welcome}>👨‍🎓 Welcome, {username}</span>
         <button style={styles.logoutBtn} onClick={onLogout}>
@@ -48,11 +47,7 @@ const styles = {
     fontFamily: 'Arial, sans-serif',
     marginBottom: '20px',
   },
-  welcome: {
-    fontSize: '15px',
-    fontWeight: 'bold',
-    color: '#1a3fa0',
-  },
+  welcome: { fontSize: '15px', fontWeight: 'bold', color: '#1a3fa0' },
   logoutBtn: {
     padding: '8px 16px',
     backgroundColor: '#dc3545',
@@ -64,11 +59,7 @@ const styles = {
     cursor: 'pointer',
     fontFamily: 'Arial, sans-serif',
   },
-  title: {
-    textAlign: 'center',
-    fontFamily: 'Arial, sans-serif',
-    color: '#333',
-  },
+  title: { textAlign: 'center', fontFamily: 'Arial, sans-serif', color: '#333' },
   footer: {
     textAlign: 'center',
     fontFamily: 'Arial, sans-serif',

@@ -3,12 +3,13 @@
 const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student');
+const { protect, requireRole } = require('../middleware/authMiddleware');  // ← NEW
 
 // ─────────────────────────────────────────────
-// CREATE — Add a new student
+// CREATE — Add a new student (any logged-in user)
 // POST /students
 // ─────────────────────────────────────────────
-router.post('/', async (req, res) => {
+router.post('/', protect, async (req, res) => {                            // ← NEW
   try {
     const newStudent = await Student.create(req.body);
     res.status(201).json({
@@ -25,11 +26,10 @@ router.post('/', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-// BULK CREATE — Add many students at once (used by CSV upload)
+// BULK CREATE (admin only)
 // POST /students/bulk
-// ⚠️ IMPORTANT: this MUST come BEFORE any /:id routes
 // ─────────────────────────────────────────────
-router.post('/bulk', async (req, res) => {
+router.post('/bulk', protect, requireRole('admin'), async (req, res) => {  // ← NEW
   try {
     const { students } = req.body;
 
@@ -73,10 +73,10 @@ router.post('/bulk', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-// READ ALL — Get every student
+// READ ALL (any logged-in user)
 // GET /students
 // ─────────────────────────────────────────────
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {                             // ← NEW
   try {
     const students = await Student.find().sort({ createdAt: -1 });
     res.status(200).json({
@@ -93,11 +93,10 @@ router.get('/', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-// READ ONE — Get a single student by id
+// READ ONE (any logged-in user)
 // GET /students/:id
-// ⚠️ This is a wildcard. It must come AFTER specific routes.
 // ─────────────────────────────────────────────
-router.get('/:id', async (req, res) => {
+router.get('/:id', protect, async (req, res) => {                          // ← NEW
   try {
     const student = await Student.findById(req.params.id);
     if (!student) {
@@ -119,10 +118,10 @@ router.get('/:id', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-// UPDATE — Modify an existing student
+// UPDATE (admin only)
 // PUT /students/:id
 // ─────────────────────────────────────────────
-router.put('/:id', async (req, res) => {
+router.put('/:id', protect, requireRole('admin'), async (req, res) => {    // ← NEW
   try {
     const updatedStudent = await Student.findByIdAndUpdate(
       req.params.id,
@@ -151,10 +150,10 @@ router.put('/:id', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-// DELETE — Remove a student
+// DELETE (admin only)
 // DELETE /students/:id
 // ─────────────────────────────────────────────
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, requireRole('admin'), async (req, res) => { // ← NEW
   try {
     const deletedStudent = await Student.findByIdAndDelete(req.params.id);
 
