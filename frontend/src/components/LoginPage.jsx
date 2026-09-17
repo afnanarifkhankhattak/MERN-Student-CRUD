@@ -125,13 +125,13 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
             </button>
           </form>
 
-      <div className="login-hint">
+      {/* <div className="login-hint">
   <strong>Demo credentials</strong>
   <br />
   Student: <code>student</code> / <code>student123</code>
   <br />
   Admin: <code>admin</code> / <code>admin123</code>
-</div>
+</div> */}
 
 <div className="login-footer">
   Don't have an account?{' '}
