@@ -103,7 +103,7 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
             <input
               type="text"
               className="login-input"
-              placeholder="👤  Enter your username"
+              placeholder="  Enter your username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
@@ -113,7 +113,7 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
             <input
               type="password"
               className="login-input"
-              placeholder="🔒  Enter your password"
+              placeholder="  Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"

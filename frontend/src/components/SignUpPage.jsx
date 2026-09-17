@@ -122,7 +122,7 @@ function SignUpPage({ onGoToLogin }) {
               type="text"
               name="username"
               className="login-input"
-              placeholder="👤  Choose a username"
+              placeholder=" Choose a username"
               value={formData.username}
               onChange={handleChange}
               autoComplete="username"
@@ -133,7 +133,7 @@ function SignUpPage({ onGoToLogin }) {
               type="password"
               name="password"
               className="login-input"
-              placeholder="🔒  Choose a password (min 6 chars)"
+              placeholder="  Choose a password (min 6 chars)"
               value={formData.password}
               onChange={handleChange}
               autoComplete="new-password"
@@ -144,7 +144,7 @@ function SignUpPage({ onGoToLogin }) {
               type="password"
               name="confirmPassword"
               className="login-input"
-              placeholder="🔒  Confirm your password"
+              placeholder="  Confirm your password"
               value={formData.confirmPassword}
               onChange={handleChange}
               autoComplete="new-password"
@@ -159,7 +159,7 @@ function SignUpPage({ onGoToLogin }) {
                 onClick={() => setFormData((p) => ({ ...p, role: 'student' }))}
                 disabled={loading}
               >
-                👨‍🎓 Student
+                 Student
               </button>
               <button
                 type="button"
@@ -167,7 +167,7 @@ function SignUpPage({ onGoToLogin }) {
                 onClick={() => setFormData((p) => ({ ...p, role: 'admin' }))}
                 disabled={loading}
               >
-                👨‍💼 Admin
+                 Admin
               </button>
             </div>
 
