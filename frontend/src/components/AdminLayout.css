@@ -1,0 +1,228 @@
+/* frontend/src/components/AdminLayout.css */
+
+* { box-sizing: border-box; }
+
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f7fb;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* ── SIDEBAR ─────────────────────────────────── */
+.admin-sidebar {
+  width: 240px;
+  background-color: #1e2a4a;
+  color: #dbe3f0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 24px;
+  border-bottom: 1px solid #2e3d63;
+  margin-bottom: 16px;
+}
+
+.admin-brand-icon { font-size: 22px; }
+
+.admin-brand-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: #b7c2dc;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-nav-item:hover {
+  background-color: #2a3757;
+  color: #ffffff;
+}
+
+.admin-nav-item.active {
+  background-color: #4a72c4;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.admin-nav-icon { font-size: 16px; }
+
+.admin-nav-label { flex: 1; }
+
+.admin-sidebar-footer {
+  padding-top: 16px;
+  border-top: 1px solid #2e3d63;
+}
+
+.admin-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.admin-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #4a72c4;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.admin-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.admin-user-role {
+  font-size: 11px;
+  color: #8a99bb;
+}
+
+.admin-logout {
+  width: 100%;
+  padding: 9px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.15s ease;
+}
+
+.admin-logout:hover {
+  background-color: #b02633;
+}
+
+/* ── MAIN AREA ───────────────────────────────── */
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-topbar {
+  background-color: #ffffff;
+  padding: 18px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 1px solid #e3e8f0;
+  flex-wrap: wrap;
+}
+
+.admin-topbar-title {
+  margin: 0;
+  font-size: 22px;
+  color: #1e2a4a;
+}
+
+.admin-topbar-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.admin-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-search {
+  padding: 9px 14px;
+  border: 1px solid #e3e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  width: 220px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-search:focus {
+  border-color: #4a72c4;
+  box-shadow: 0 0 0 3px rgba(74, 114, 196, 0.1);
+}
+
+.admin-icon-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #e3e8f0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.admin-icon-btn:hover {
+  background-color: #f0f4fc;
+}
+
+.admin-content {
+  padding: 24px 28px;
+  flex: 1;
+  overflow: auto;
+}
+
+/* ── RESPONSIVE ──────────────────────────────── */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 64px;
+    padding: 12px 6px;
+  }
+  .admin-brand-text,
+  .admin-nav-label,
+  .admin-user-info,
+  .admin-logout {
+    display: none;
+  }
+  .admin-nav-item {
+    justify-content: center;
+    padding: 10px;
+  }
+  .admin-user-chip { justify-content: center; }
+}
