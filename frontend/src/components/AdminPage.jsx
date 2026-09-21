@@ -130,21 +130,22 @@ function AdminPage({ username, onLogout }) {
         );
 
       // Placeholders — we'll build these in the next stages
-      case 'teachers':
-      case 'fees':
-      case 'courses':
-      case 'calendar':
-      case 'messages':
-      case 'settings':
-        return (
-          <div style={placeholder}>
-            <h2 style={{ margin: 0 }}>🚧 Coming Soon</h2>
-            <p style={{ color: '#6b7280' }}>
-              The <strong>{activePage}</strong> module will be built in the next stage.
-            </p>
-          </div>
-        );
+    case 'teachers':
+  return <TeachersAdmin showToast={show} />;
 
+case 'fees':
+case 'courses':
+case 'calendar':
+case 'messages':
+case 'settings':
+  return (
+    <div style={placeholder}>
+      <h2 style={{ margin: 0 }}>🚧 Coming Soon</h2>
+      <p style={{ color: '#6b7280' }}>
+        The <strong>{activePage}</strong> module will be built in the next stage.
+      </p>
+    </div>
+  );
       default:
         return <DashboardPage />;
     }

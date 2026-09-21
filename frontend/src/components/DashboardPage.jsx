@@ -2,31 +2,36 @@
 
 import { useState, useEffect } from 'react';
 import './DashboardPage.css';
-import { STUDENTS_URL, apiFetch } from '../api';
+import { STUDENTS_URL, TEACHERS_URL, apiFetch } from '../api';
 
 function DashboardPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [teachers, setTeachers] = useState([]);
 
   // Fetch students for stats + recent table
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await apiFetch(STUDENTS_URL);
-        const data = await res.json();
-        if (res.ok) setStudents(data.data || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
+ useEffect(() => {
+  const load = async () => {
+    try {
+      const [studentsRes, teachersRes] = await Promise.all([
+        apiFetch(STUDENTS_URL),
+        apiFetch(TEACHERS_URL),
+      ]);
+      const sData = await studentsRes.json();
+      const tData = await teachersRes.json();
+      if (studentsRes.ok) setStudents(sData.data || []);
+      if (teachersRes.ok) setTeachers(tData.data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  load();
+}, []);
   // ── Compute stats from real data ───────────
   const totalStudents = students.length;
-  const totalTeachers = 60;   // placeholder until we build Teachers module
+ const totalTeachers = teachers.length;   // placeholder until we build Teachers module
   const totalFees = 296000;   // placeholder until we build Fees module
   const recentStudents = students.slice(0, 5);
 
