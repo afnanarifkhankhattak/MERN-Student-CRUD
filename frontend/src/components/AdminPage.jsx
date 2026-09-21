@@ -5,6 +5,7 @@ import AdminLayout from './AdminLayout';
 import DashboardPage from './DashboardPage';
 import StudentForm from './StudentForm';
 import StudentTable from './StudentTable';
+import TeachersAdmin from './TeachersAdmin';
 
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
