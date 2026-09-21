@@ -8,6 +8,7 @@ import StudentTable from './StudentTable';
 import TeachersAdmin from './TeachersAdmin';
 import FeesAdmin from './FeesAdmin';
 import CoursesAdmin from './CoursesAdmin';
+import CalendarPage from './CalendarPage';
 
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
@@ -142,6 +143,8 @@ case 'courses':
   return <CoursesAdmin showToast={show} />;
 
 case 'calendar':
+  return <CalendarPage />;
+
 case 'messages':
 case 'settings':
   return (
