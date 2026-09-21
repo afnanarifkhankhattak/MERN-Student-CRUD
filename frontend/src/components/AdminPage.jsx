@@ -10,6 +10,7 @@ import FeesAdmin from './FeesAdmin';
 import CoursesAdmin from './CoursesAdmin';
 import CalendarPage from './CalendarPage';
 import MessagesPage from './MessagesPage';
+import SettingsPage from './SettingsPage';
 
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
@@ -150,14 +151,7 @@ case 'messages':
   return <MessagesPage />;
 
 case 'settings':
-  return (
-    <div style={placeholder}>
-      <h2 style={{ margin: 0 }}>🚧 Coming Soon</h2>
-      <p style={{ color: '#6b7280' }}>
-        The <strong>settings</strong> module will be built in the next stage.
-      </p>
-    </div>
-  );
+  return <SettingsPage />;
       default:
         return <DashboardPage />;
     }
