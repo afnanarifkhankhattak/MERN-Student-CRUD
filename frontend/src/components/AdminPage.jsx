@@ -9,6 +9,7 @@ import TeachersAdmin from './TeachersAdmin';
 import FeesAdmin from './FeesAdmin';
 import CoursesAdmin from './CoursesAdmin';
 import CalendarPage from './CalendarPage';
+import MessagesPage from './MessagesPage';
 
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
@@ -146,12 +147,14 @@ case 'calendar':
   return <CalendarPage />;
 
 case 'messages':
+  return <MessagesPage />;
+
 case 'settings':
   return (
     <div style={placeholder}>
       <h2 style={{ margin: 0 }}>🚧 Coming Soon</h2>
       <p style={{ color: '#6b7280' }}>
-        The <strong>{activePage}</strong> module will be built in the next stage.
+        The <strong>settings</strong> module will be built in the next stage.
       </p>
     </div>
   );
