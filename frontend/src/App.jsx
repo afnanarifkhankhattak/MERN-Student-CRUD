@@ -7,11 +7,6 @@ import StudentPage from './components/StudentPage';
 import AdminPage from './components/AdminPage';
 import { getToken, getStoredUser, clearToken, clearStoredUser } from './api';
 
-// Apply the saved theme on app mount
-useEffect(() => {
-  const savedTheme = localStorage.getItem('settings_theme') || 'light';
-  document.body.classList.toggle('theme-dark', savedTheme === 'dark');
-}, []);
 
 function App() {
   // Read auth from localStorage on first render
@@ -25,6 +20,13 @@ function App() {
   const handleLoginSuccess = (loggedInUser) => {
     setUser(loggedInUser);
   };
+
+  // Apply the saved theme on app mount
+useEffect(() => {
+  const savedTheme = localStorage.getItem('settings_theme') || 'light';
+  document.body.classList.toggle('theme-dark', savedTheme === 'dark');
+}, []);
+
 
   const handleLogout = () => {
     clearToken();
