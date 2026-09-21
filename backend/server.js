@@ -8,7 +8,8 @@ const connectDB = require('./db');
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/students');
 const teacherRoutes = require('./routes/teachers');
-const feeRoutes = require('./routes/fees');      // ← NEW
+const feeRoutes = require('./routes/fees');
+const courseRoutes = require('./routes/courses');    // ← NEW
 
 connectDB();
 
@@ -24,7 +25,8 @@ app.get('/', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/students', studentRoutes);
 app.use('/teachers', teacherRoutes);
-app.use('/fees', feeRoutes);                     // ← NEW
+app.use('/fees', feeRoutes);
+app.use('/courses', courseRoutes);                   // ← NEW
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

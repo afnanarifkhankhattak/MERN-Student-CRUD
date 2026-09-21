@@ -7,6 +7,7 @@ import StudentForm from './StudentForm';
 import StudentTable from './StudentTable';
 import TeachersAdmin from './TeachersAdmin';
 import FeesAdmin from './FeesAdmin';
+import CoursesAdmin from './CoursesAdmin';
 
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
@@ -138,6 +139,8 @@ case 'fees':
   return <FeesAdmin showToast={show} />;
 
 case 'courses':
+  return <CoursesAdmin showToast={show} />;
+
 case 'calendar':
 case 'messages':
 case 'settings':

@@ -2,25 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import './DashboardPage.css';
-import { STUDENTS_URL, TEACHERS_URL, FEES_URL, apiFetch } from '../api';
+import { STUDENTS_URL, TEACHERS_URL, FEES_URL, COURSES_URL, apiFetch } from '../api';
 
 function DashboardPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [teachers, setTeachers] = useState([]);
   const [feeTotals, setFeeTotals] = useState({ totalAmount: 0, totalPaid: 0, totalBalance: 0 });
+  const [courses, setCourses] = useState([]);
 
- useEffect(() => {
+useEffect(() => {
   const load = async () => {
     try {
-      const [studentsRes, teachersRes, feesRes] = await Promise.all([
+      const [studentsRes, teachersRes, feesRes, coursesRes] = await Promise.all([
         apiFetch(STUDENTS_URL),
         apiFetch(TEACHERS_URL),
         apiFetch(FEES_URL),
+        apiFetch(COURSES_URL),
       ]);
       const sData = await studentsRes.json();
       const tData = await teachersRes.json();
       const fData = await feesRes.json();
+      const cData = await coursesRes.json();
 
       if (studentsRes.ok) setStudents(sData.data || []);
       if (teachersRes.ok) setTeachers(tData.data || []);
@@ -31,6 +34,7 @@ function DashboardPage() {
           totalBalance: fData.totalBalance || 0,
         });
       }
+      if (coursesRes.ok) setCourses(cData.data || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -84,10 +88,10 @@ function DashboardPage() {
 </div>
 
 <div className="stat-card">
-  <div className="stat-icon orange">📉</div>
+  <div className="stat-icon orange">📚</div>
   <div>
-    <div className="stat-label">Outstanding</div>
-    <div className="stat-value">Rs {feeTotals.totalBalance.toLocaleString()}</div>
+    <div className="stat-label">Active Courses</div>
+    <div className="stat-value">{courses.length}</div>
   </div>
 </div>
 

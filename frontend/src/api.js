@@ -3,7 +3,8 @@
 export const API_BASE = 'https://mern-student-crud-tlt6.onrender.com';
 export const STUDENTS_URL = `${API_BASE}/students`;
 export const TEACHERS_URL = `${API_BASE}/teachers`; 
-export const FEES_URL = `${API_BASE}/fees`;      // ← NEW
+export const FEES_URL = `${API_BASE}/fees`;    
+export const COURSES_URL = `${API_BASE}/courses`;   // ← NEW
 export const AUTH_URL = `${API_BASE}/auth`;
 
 // ── Token storage helpers ────────────────────────
