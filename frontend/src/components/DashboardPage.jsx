@@ -45,7 +45,7 @@ function DashboardPage() {
     <div className="dash-grid">
       {/* ── Top stat cards ─────────────────── */}
       <div className="stat-card">
-        <div className="stat-icon blue">👨‍🎓</div>
+        <div className="stat-icon blue"></div>
         <div>
           <div className="stat-label">Total Students</div>
           <div className="stat-value">{totalStudents}</div>
@@ -53,7 +53,7 @@ function DashboardPage() {
       </div>
 
       <div className="stat-card">
-        <div className="stat-icon purple">👨‍🏫</div>
+        <div className="stat-icon purple"></div>
         <div>
           <div className="stat-label">Teachers</div>
           <div className="stat-value">{totalTeachers}</div>
@@ -61,7 +61,7 @@ function DashboardPage() {
       </div>
 
       <div className="stat-card">
-        <div className="stat-icon green">💰</div>
+        <div className="stat-icon green"></div>
         <div>
           <div className="stat-label">Total Fees</div>
           <div className="stat-value">Rs {totalFees.toLocaleString()}</div>
@@ -69,7 +69,7 @@ function DashboardPage() {
       </div>
 
       <div className="stat-card">
-        <div className="stat-icon orange">📚</div>
+        <div className="stat-icon orange"></div>
         <div>
           <div className="stat-label">Active Courses</div>
           <div className="stat-value">12</div>

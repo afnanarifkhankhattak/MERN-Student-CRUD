@@ -4,14 +4,14 @@ import './AdminLayout.css';
 
 // ── Sidebar menu items ─────────────────────────
 const MENU_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard',  icon: '📊' },
-  { id: 'students',  label: 'Students',   icon: '👨‍🎓' },
-  { id: 'teachers',  label: 'Teachers',   icon: '👨‍🏫' },
-  { id: 'fees',      label: 'Fees',       icon: '💰' },
-  { id: 'courses',   label: 'Courses',    icon: '📚' },
-  { id: 'calendar',  label: 'Calendar',   icon: '📅' },
-  { id: 'messages',  label: 'Messages',   icon: '💬' },
-  { id: 'settings',  label: 'Settings',   icon: '⚙️' },
+  { id: 'dashboard', label: 'Dashboard',  icon: '' },
+  { id: 'students',  label: 'Students',   icon: '' },
+  { id: 'teachers',  label: 'Teachers',   icon: '' },
+  { id: 'fees',      label: 'Fees',       icon: '' },
+  { id: 'courses',   label: 'Courses',    icon: '' },
+  { id: 'calendar',  label: 'Calendar',   icon: '' },
+  { id: 'messages',  label: 'Messages',   icon: '' },
+  { id: 'settings',  label: 'Settings',   icon: '' },
 ];
 
 function AdminLayout({ username, activePage, onNavigate, onLogout, children }) {
@@ -69,10 +69,10 @@ function AdminLayout({ username, activePage, onNavigate, onLogout, children }) {
             <input
               type="text"
               className="admin-search"
-              placeholder="🔍 Search..."
+              placeholder="Search..."
             />
             <button className="admin-icon-btn" title="Notifications">
-              🔔
+              
             </button>
           </div>
         </header>
