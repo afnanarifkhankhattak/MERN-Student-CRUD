@@ -2,25 +2,35 @@
 
 import { useState, useEffect } from 'react';
 import './DashboardPage.css';
-import { STUDENTS_URL, TEACHERS_URL, apiFetch } from '../api';
+import { STUDENTS_URL, TEACHERS_URL, FEES_URL, apiFetch } from '../api';
 
 function DashboardPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [teachers, setTeachers] = useState([]);
+  const [feeTotals, setFeeTotals] = useState({ totalAmount: 0, totalPaid: 0, totalBalance: 0 });
 
-  // Fetch students for stats + recent table
  useEffect(() => {
   const load = async () => {
     try {
-      const [studentsRes, teachersRes] = await Promise.all([
+      const [studentsRes, teachersRes, feesRes] = await Promise.all([
         apiFetch(STUDENTS_URL),
         apiFetch(TEACHERS_URL),
+        apiFetch(FEES_URL),
       ]);
       const sData = await studentsRes.json();
       const tData = await teachersRes.json();
+      const fData = await feesRes.json();
+
       if (studentsRes.ok) setStudents(sData.data || []);
       if (teachersRes.ok) setTeachers(tData.data || []);
+      if (feesRes.ok) {
+        setFeeTotals({
+          totalAmount: fData.totalAmount || 0,
+          totalPaid: fData.totalPaid || 0,
+          totalBalance: fData.totalBalance || 0,
+        });
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -32,7 +42,7 @@ function DashboardPage() {
   // ── Compute stats from real data ───────────
   const totalStudents = students.length;
  const totalTeachers = teachers.length;   // placeholder until we build Teachers module
-  const totalFees = 296000;   // placeholder until we build Fees module
+  // const totalFees = 296000;   // placeholder until we build Fees module
   const recentStudents = students.slice(0, 5);
 
   // Count by department for the donut chart (simplified)
@@ -66,12 +76,20 @@ function DashboardPage() {
       </div>
 
       <div className="stat-card">
-        <div className="stat-icon green"></div>
-        <div>
-          <div className="stat-label">Total Fees</div>
-          <div className="stat-value">Rs {totalFees.toLocaleString()}</div>
-        </div>
-      </div>
+  <div className="stat-icon green">💰</div>
+  <div>
+    <div className="stat-label">Collected Fees</div>
+    <div className="stat-value">Rs {feeTotals.totalPaid.toLocaleString()}</div>
+  </div>
+</div>
+
+<div className="stat-card">
+  <div className="stat-icon orange">📉</div>
+  <div>
+    <div className="stat-label">Outstanding</div>
+    <div className="stat-value">Rs {feeTotals.totalBalance.toLocaleString()}</div>
+  </div>
+</div>
 
       <div className="stat-card">
         <div className="stat-icon orange"></div>

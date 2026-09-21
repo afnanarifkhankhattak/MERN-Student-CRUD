@@ -5,9 +5,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./db');
-const studentRoutes = require('./routes/students');
 const authRoutes = require('./routes/auth');
-const teacherRoutes = require('./routes/teachers');    // ← NEW
+const studentRoutes = require('./routes/students');
+const teacherRoutes = require('./routes/teachers');
+const feeRoutes = require('./routes/fees');      // ← NEW
 
 connectDB();
 
@@ -22,7 +23,8 @@ app.get('/', (req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/students', studentRoutes);
-app.use('/teachers', teacherRoutes);                   // ← NEW
+app.use('/teachers', teacherRoutes);
+app.use('/fees', feeRoutes);                     // ← NEW
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

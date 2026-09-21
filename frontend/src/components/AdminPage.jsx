@@ -6,6 +6,7 @@ import DashboardPage from './DashboardPage';
 import StudentForm from './StudentForm';
 import StudentTable from './StudentTable';
 import TeachersAdmin from './TeachersAdmin';
+import FeesAdmin from './FeesAdmin';
 
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
@@ -130,11 +131,12 @@ function AdminPage({ username, onLogout }) {
           </>
         );
 
-      // Placeholders — we'll build these in the next stages
-    case 'teachers':
+case 'teachers':
   return <TeachersAdmin showToast={show} />;
 
 case 'fees':
+  return <FeesAdmin showToast={show} />;
+
 case 'courses':
 case 'calendar':
 case 'messages':
