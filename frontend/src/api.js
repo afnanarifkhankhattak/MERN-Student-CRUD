@@ -23,8 +23,14 @@ export const PARENTS_URL = `${API_BASE}/parents`;
 // ── Enrollment endpoint ─────────────────────────
 export const ENROLLMENTS_URL = `${API_BASE}/enrollments`;
 
-// ── NEW: Attendance endpoint ────────────────────
+// ── Attendance endpoint ─────────────────────────
 export const ATTENDANCE_URL = `${API_BASE}/attendance`;
+
+// ── NEW: Exam endpoint ──────────────────────────
+// All exam sub-endpoints (subjects, marks-sheet, rankings, report-card)
+// are nested under this base. Compose paths like:
+//   `${EXAMS_URL}/${examId}/marks-sheet?section=${sectionId}`
+export const EXAMS_URL = `${API_BASE}/exams`;
 
 // ── Token storage helpers ────────────────────────
 export const getToken = () => localStorage.getItem('token');

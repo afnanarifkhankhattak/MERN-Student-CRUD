@@ -17,6 +17,7 @@ import SectionsAdmin from './SectionsAdmin';
 import SubjectsAdmin from './SubjectsAdmin';
 import ParentsAdmin from './ParentsAdmin';
 import EnrollmentsAdmin from './EnrollmentsAdmin';
+import ExamsAdmin from './ExamsAdmin';
 
 // NEW: Attendance import
 import AttendanceAdmin from './AttendanceAdmin';
@@ -168,7 +169,8 @@ function AdminPage({ username, onLogout }) {
 
       case 'subjects':
         return <SubjectsAdmin showToast={show} />;
-
+case 'exams':
+  return <ExamsAdmin showToast={show} />;
       case 'enrollments':
         return <EnrollmentsAdmin showToast={show} />;
 

@@ -23,8 +23,14 @@ const classSubjectRoutes = require('./routes/classSubjects');
 // ── Parent routes ───────────────────────────────
 const parentRoutes = require('./routes/parents');
 
-// ── NEW: Enrollment routes ──────────────────────
+// ── Enrollment routes ───────────────────────────
 const enrollmentRoutes = require('./routes/enrollments');
+
+// ── Attendance routes ───────────────────────────
+const attendanceRoutes = require('./routes/attendance');
+
+// ── NEW: Exam routes ────────────────────────────
+const examRoutes = require('./routes/exams');
 
 connectDB();
 
@@ -55,8 +61,14 @@ app.use('/class-subjects', classSubjectRoutes);
 // ── Parent mount ────────────────────────────────
 app.use('/parents', parentRoutes);
 
-// ── NEW: Enrollment mount ───────────────────────
+// ── Enrollment mount ────────────────────────────
 app.use('/enrollments', enrollmentRoutes);
+
+// ── Attendance mount ────────────────────────────
+app.use('/attendance', attendanceRoutes);
+
+// ── NEW: Exam mount ─────────────────────────────
+app.use('/exams', examRoutes);
 
 // ── Start server ────────────────────────────────
 const PORT = process.env.PORT || 5000;

@@ -11,6 +11,7 @@ import {
   SECTIONS_URL,
   SUBJECTS_URL,
   ATTENDANCE_URL,
+  EXAMS_URL,
   apiFetch,
 } from '../api';
 
@@ -22,6 +23,7 @@ function DashboardPage() {
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [exams, setExams] = useState([]);
   const [feeTotals, setFeeTotals] = useState({
     totalAmount: 0,
     totalPaid: 0,
@@ -52,6 +54,7 @@ function DashboardPage() {
           sectionsRes,
           subjectsRes,
           attendanceRes,
+          examsRes,
         ] = await Promise.all([
           apiFetch(STUDENTS_URL),
           apiFetch(TEACHERS_URL),
@@ -61,6 +64,7 @@ function DashboardPage() {
           apiFetch(SECTIONS_URL),
           apiFetch(SUBJECTS_URL),
           apiFetch(`${ATTENDANCE_URL}?date=${today}`),
+          apiFetch(EXAMS_URL),
         ]);
 
         const sData = await studentsRes.json();
@@ -71,6 +75,7 @@ function DashboardPage() {
         const secData = await sectionsRes.json();
         const subData = await subjectsRes.json();
         const aData = await attendanceRes.json();
+        const eData = await examsRes.json();
 
         if (studentsRes.ok) setStudents(sData.data || []);
         if (teachersRes.ok) setTeachers(tData.data || []);
@@ -78,6 +83,7 @@ function DashboardPage() {
         if (classesRes.ok) setClasses(clData.data || []);
         if (sectionsRes.ok) setSections(secData.data || []);
         if (subjectsRes.ok) setSubjects(subData.data || []);
+        if (examsRes.ok) setExams(eData.data || []);
 
         if (feesRes.ok) {
           setFeeTotals({
@@ -117,6 +123,13 @@ function DashboardPage() {
   const totalClasses = classes.length;
   const totalSections = sections.length;
   const totalSubjects = subjects.length;
+
+  // Exam stats
+  const totalExams = exams.length;
+  const publishedExams = exams.filter((e) => e.status === 'published').length;
+  const ongoingExams = exams.filter((e) => e.status === 'ongoing').length;
+  const draftExams = exams.filter((e) => e.status === 'draft').length;
+  const recentExam = exams[0] || null;
 
   // Department breakdown for the donut
   const deptCounts = {};
@@ -235,6 +248,21 @@ function DashboardPage() {
             ))}
           </ul>
         </div>
+      </div>
+
+      {/* ── Exams Overview widget ──────────── */}
+      <div className="panel">
+        <div className="panel-header">
+          <h3>Exams Overview</h3>
+          <span className="panel-tag">Live</span>
+        </div>
+        <ExamsWidget
+          total={totalExams}
+          published={publishedExams}
+          ongoing={ongoingExams}
+          draft={draftExams}
+          recentExam={recentExam}
+        />
       </div>
 
       {/* ── Today's Attendance widget ──────── */}
@@ -418,7 +446,6 @@ function AttendanceWidget({ data }) {
 
   return (
     <div style={widgetStyles.wrap}>
-      {/* Big percentage */}
       <div style={widgetStyles.bigWrap}>
         <div style={{ ...widgetStyles.bigPercent, color }}>
           {percentage}%
@@ -426,7 +453,6 @@ function AttendanceWidget({ data }) {
         <div style={widgetStyles.bigLabel}>Attendance rate</div>
       </div>
 
-      {/* Progress bar */}
       <div style={widgetStyles.barOuter}>
         <div
           style={{
@@ -437,7 +463,6 @@ function AttendanceWidget({ data }) {
         />
       </div>
 
-      {/* Mini stats grid */}
       <div style={widgetStyles.grid}>
         <StatChip label="Present" value={present} color="#10b981" />
         <StatChip label="Absent"  value={absent}  color="#dc3545" />
@@ -452,7 +477,74 @@ function AttendanceWidget({ data }) {
   );
 }
 
-// Small chip for the mini stats
+// ── Exams Overview Widget ──────────────────────
+function ExamsWidget({ total, published, ongoing, draft, recentExam }) {
+  if (total === 0) {
+    return (
+      <div style={examsWidgetStyles.empty}>
+        <div style={examsWidgetStyles.emptyIcon}>📝</div>
+        <div style={examsWidgetStyles.emptyText}>No exams yet.</div>
+        <div style={examsWidgetStyles.emptyHint}>
+          Go to Exams → 📋 Exams List to create one.
+        </div>
+      </div>
+    );
+  }
+
+  const statusColors = {
+    draft: '#6b7280',
+    ongoing: '#f59e0b',
+    completed: '#4a72c4',
+    published: '#10b981',
+  };
+
+  return (
+    <div style={examsWidgetStyles.wrap}>
+      {/* Big number */}
+      <div style={examsWidgetStyles.bigWrap}>
+        <div style={examsWidgetStyles.bigNumber}>{total}</div>
+        <div style={examsWidgetStyles.bigLabel}>Total Exams</div>
+      </div>
+
+      {/* Status chips */}
+      <div style={examsWidgetStyles.grid}>
+        <StatusChip label="Published" count={published} color="#10b981" />
+        <StatusChip label="Ongoing" count={ongoing} color="#f59e0b" />
+        <StatusChip label="Draft" count={draft} color="#6b7280" />
+      </div>
+
+      {/* Recent exam */}
+      {recentExam && (
+        <div style={examsWidgetStyles.recentWrap}>
+          <div style={examsWidgetStyles.recentLabel}>Most Recent</div>
+          <div style={examsWidgetStyles.recentCard}>
+            <div style={examsWidgetStyles.recentInfo}>
+              <div style={examsWidgetStyles.recentName}>
+                {recentExam.name}
+              </div>
+              <div style={examsWidgetStyles.recentMeta}>
+                {recentExam.class?.name || '—'} ·{' '}
+                {recentExam.academicYear?.name || '—'}
+              </div>
+            </div>
+            <span
+              style={{
+                ...examsWidgetStyles.recentStatus,
+                backgroundColor:
+                  (statusColors[recentExam.status] || '#6b7280') + '22',
+                color: statusColors[recentExam.status] || '#6b7280',
+              }}
+            >
+              {recentExam.status}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Small chip for the attendance mini stats
 function StatChip({ label, value, color }) {
   return (
     <div
@@ -475,6 +567,45 @@ function StatChip({ label, value, color }) {
         }}
       >
         {value}
+      </span>
+      <span
+        style={{
+          fontSize: '10px',
+          color: '#4b5563',
+          marginTop: '3px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.4px',
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// Small chip for the exams status breakdown
+function StatusChip({ label, count, color }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '6px',
+        borderRadius: '8px',
+        backgroundColor: color + '15',
+        border: `1px solid ${color}40`,
+      }}
+    >
+      <span
+        style={{
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: color,
+          lineHeight: 1,
+        }}
+      >
+        {count}
       </span>
       <span
         style={{
@@ -566,7 +697,7 @@ const feeValueStyle = {
   color: '#1e2a4a',
 };
 
-// ── Widget styles ──────────────────────────────
+// ── Widget styles (attendance) ─────────────────
 const widgetStyles = {
   wrap: {
     display: 'flex',
@@ -632,6 +763,86 @@ const widgetStyles = {
     color: '#9ca3af',
     marginTop: '4px',
   },
+};
+
+// ── Widget styles (exams) ──────────────────────
+const examsWidgetStyles = {
+  wrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    paddingTop: '6px',
+  },
+  bigWrap: {
+    textAlign: 'center',
+    padding: '8px 0 4px',
+  },
+  bigNumber: {
+    fontSize: '48px',
+    fontWeight: 'bold',
+    color: '#1e2a4a',
+    lineHeight: 1,
+  },
+  bigLabel: {
+    fontSize: '11px',
+    color: '#6b7280',
+    marginTop: '4px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.6px',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '6px',
+  },
+  recentWrap: {
+    marginTop: '6px',
+    paddingTop: '10px',
+    borderTop: '1px solid #eef1f6',
+  },
+  recentLabel: {
+    fontSize: '10px',
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    marginBottom: '6px',
+  },
+  recentCard: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '8px 10px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '8px',
+    border: '1px solid #eef1f6',
+  },
+  recentInfo: { flex: 1, minWidth: 0 },
+  recentName: {
+    fontSize: '13px',
+    fontWeight: 'bold',
+    color: '#1e2a4a',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  recentMeta: {
+    fontSize: '11px',
+    color: '#6b7280',
+    marginTop: '2px',
+  },
+  recentStatus: {
+    padding: '3px 10px',
+    borderRadius: '12px',
+    fontSize: '10px',
+    fontWeight: 'bold',
+    textTransform: 'capitalize',
+    whiteSpace: 'nowrap',
+  },
+  empty: { padding: '20px 10px', textAlign: 'center' },
+  emptyIcon: { fontSize: '32px', marginBottom: '6px' },
+  emptyText: { fontSize: '14px', fontWeight: 'bold', color: '#4b5563' },
+  emptyHint: { fontSize: '12px', color: '#9ca3af', marginTop: '4px' },
 };
 
 export default DashboardPage;
