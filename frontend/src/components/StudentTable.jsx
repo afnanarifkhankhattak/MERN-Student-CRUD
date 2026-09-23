@@ -1,15 +1,21 @@
 // frontend/src/components/StudentTable.jsx
 
-// import { useEffect, useState } from 'react';
-// import UploadCSV from './UploadCSV';
-
-// const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
-
 import { useEffect, useState } from 'react';
 import UploadCSV from './UploadCSV';
-import { STUDENTS_URL as API_URL, apiFetch } from '../api';
+import {
+  STUDENTS_URL as API_URL,
+  CLASSES_URL,
+  apiFetch,
+} from '../api';
 
 const STUDENTS_PER_PAGE = 10;
+
+// ── Status badge colors ──────────────────────────
+const STATUS_STYLE = {
+  active:   { backgroundColor: '#d4edda', color: '#155724' },
+  inactive: { backgroundColor: '#f1f3f5', color: '#6b7280' },
+  alumni:   { backgroundColor: '#dbeafe', color: '#1e40af' },
+};
 
 function StudentTable({
   refreshTrigger,
@@ -17,71 +23,155 @@ function StudentTable({
   onDelete,
   onDuplicate,
   onUploadComplete,
+  onDepartmentsLoaded,
 }) {
   const [students, setStudents] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ── Fetch all students from the backend ─────────
+  // ── Filter state ────────────────────────────────
+  const [filters, setFilters] = useState({
+    search: '',
+    status: '',
+    class: '',
+  });
+
+  // ── Load classes once for the filter dropdown ───
+  useEffect(() => {
+    const loadClasses = async () => {
+      try {
+        const res = await apiFetch(CLASSES_URL);
+        const data = await res.json();
+        if (res.ok) setClasses(data.data || []);
+      } catch (e) {
+        console.error('Failed to load classes for filter', e);
+      }
+    };
+    loadClasses();
+  }, []);
+
+  // ── Fetch students (applying filters) ───────────
   const fetchStudents = async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await apiFetch(API_URL);
-      const data = await response.json();
+      // Build query string from filters
+      const params = new URLSearchParams();
+      if (filters.search.trim()) params.append('search', filters.search.trim());
+      if (filters.status) params.append('status', filters.status);
+      if (filters.class) params.append('class', filters.class);
+      const query = params.toString();
+      const url = query ? `${API_URL}?${query}` : API_URL;
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch students');
+      const res = await apiFetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to fetch students');
+      setStudents(data.data || []);
+
+      // Tell parent about unique departments (for the form's dropdown)
+      if (onDepartmentsLoaded) {
+        const uniqueDepts = Array.from(
+          new Set(
+            (data.data || []).map((s) => s.department).filter(Boolean)
+          )
+        );
+        onDepartmentsLoaded(uniqueDepts);
       }
-
-      setStudents(data.data);
-    } catch (err) {
-      setError(err.message);
+    } catch (e) {
+      setError(e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ── Run fetch whenever refreshTrigger changes ───
+  // ── Re-fetch when refreshTrigger or filters change ─
   useEffect(() => {
     fetchStudents();
-  }, [refreshTrigger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger, filters.search, filters.status, filters.class]);
 
-  // ── Auto-fix currentPage if it goes out of range ─
+  // ── Reset to page 1 when filters change ─────────
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.search, filters.status, filters.class]);
+
+  // ── Auto-fix currentPage if out of range ────────
   useEffect(() => {
     const totalPages = Math.max(1, Math.ceil(students.length / STUDENTS_PER_PAGE));
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
+    if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [students, currentPage]);
 
-  // ── Compute the page slice ──────────────────────
   const totalPages = Math.max(1, Math.ceil(students.length / STUDENTS_PER_PAGE));
   const startIndex = (currentPage - 1) * STUDENTS_PER_PAGE;
-  const currentStudents = students.slice(
-    startIndex,
-    startIndex + STUDENTS_PER_PAGE
+  const currentStudents = students.slice(startIndex, startIndex + STUDENTS_PER_PAGE);
+
+  // ── Filter bar UI ───────────────────────────────
+  const renderFilters = () => (
+    <div style={styles.filterBar}>
+      <input
+        type="text"
+        placeholder="🔍 Search by name, username, reg no..."
+        value={filters.search}
+        onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+        style={styles.filterInput}
+      />
+
+      <select
+        value={filters.status}
+        onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
+        style={styles.filterSelect}
+      >
+        <option value="">All Statuses</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="alumni">Alumni</option>
+      </select>
+
+      <select
+        value={filters.class}
+        onChange={(e) => setFilters((f) => ({ ...f, class: e.target.value }))}
+        style={styles.filterSelect}
+      >
+        <option value="">All Classes</option>
+        {classes.map((c) => (
+          <option key={c._id} value={c._id}>{c.name}</option>
+        ))}
+      </select>
+
+      {(filters.search || filters.status || filters.class) && (
+        <button
+          type="button"
+          onClick={() => setFilters({ search: '', status: '', class: '' })}
+          style={styles.clearBtn}
+        >
+          Clear Filters
+        </button>
+      )}
+    </div>
   );
 
   // ── Render ──────────────────────────────────────
-  if (loading) {
-    return <p style={styles.info}>Loading students...</p>;
-  }
-
-  if (error) {
-    return <p style={styles.error}>Error: {error}</p>;
-  }
-
   return (
     <div style={styles.container}>
       <h2 style={styles.heading}>All Students</h2>
 
-      {/* Upload CSV button (always visible, even if table is empty) */}
       <UploadCSV onUploadComplete={onUploadComplete} />
 
-      {students.length === 0 ? (
-        <p style={styles.info}>No students yet. Add one above! </p>
+      {renderFilters()}
+
+      {loading ? (
+        <p style={styles.info}>Loading students...</p>
+      ) : error ? (
+        <p style={styles.error}>Error: {error}</p>
+      ) : students.length === 0 ? (
+        <p style={styles.info}>
+          No students found.
+          {(filters.search || filters.status || filters.class) && (
+            <> Try clearing filters.</>
+          )}
+        </p>
       ) : (
         <>
           <div style={{ overflowX: 'auto' }}>
@@ -90,14 +180,15 @@ function StudentTable({
                 <tr style={styles.headerRow}>
                   <th style={styles.th}>#</th>
                   <th style={styles.th}>Picture</th>
+                  <th style={styles.th}>Adm #</th>
                   <th style={styles.th}>Username</th>
-                  <th style={styles.th}>Reg No</th>
                   <th style={styles.th}>Name</th>
+                  <th style={styles.th}>Class</th>
+                  <th style={styles.th}>Section</th>
+                  <th style={styles.th}>Roll</th>
                   <th style={styles.th}>Phone</th>
                   <th style={styles.th}>Age</th>
-                  <th style={styles.th}>Email</th>
-                  <th style={styles.th}>Department</th>
-                  <th style={styles.th}>Semester</th>
+                  <th style={styles.th}>Status</th>
                   <th style={styles.th}>Actions</th>
                 </tr>
               </thead>
@@ -113,19 +204,61 @@ function StudentTable({
                         style={styles.img}
                         onError={(e) => {
                           e.target.src =
-                            'https://via.placeholder.com/50?text=?';
+                            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjZTVlN2ViIi8+PC9zdmc+';
                         }}
                       />
                     </td>
 
+                    <td style={styles.td}>
+                      {student.admissionNo ? (
+                        <span style={styles.admBadge}>{student.admissionNo}</span>
+                      ) : (
+                        <span style={styles.mutedText}>—</span>
+                      )}
+                    </td>
+
                     <td style={styles.td}>{student.username}</td>
-                    <td style={styles.td}>{student.regNo}</td>
-                    <td style={styles.td}>{student.name}</td>
+
+                    <td style={styles.td}>
+                      <div style={styles.nameCell}>
+                        <strong>{student.name}</strong>
+                        {student.regNo && (
+                          <span style={styles.subText}>{student.regNo}</span>
+                        )}
+                      </div>
+                    </td>
+
+                    <td style={styles.td}>
+                      {student.class?.name || (
+                        <span style={styles.mutedText}>—</span>
+                      )}
+                    </td>
+
+                    <td style={styles.td}>
+                      {student.section?.name || (
+                        <span style={styles.mutedText}>—</span>
+                      )}
+                    </td>
+
+                    <td style={styles.td}>
+                      {student.rollNo || (
+                        <span style={styles.mutedText}>—</span>
+                      )}
+                    </td>
+
                     <td style={styles.td}>{student.phone}</td>
                     <td style={styles.td}>{student.age}</td>
-                    <td style={styles.td}>{student.email}</td>
-                    <td style={styles.td}>{student.department}</td>
-                    <td style={styles.td}>{student.semester}</td>
+
+                    <td style={styles.td}>
+                      <span
+                        style={{
+                          ...styles.statusBadge,
+                          ...(STATUS_STYLE[student.status] || STATUS_STYLE.active),
+                        }}
+                      >
+                        ● {student.status || 'active'}
+                      </span>
+                    </td>
 
                     <td style={styles.td}>
                       <div style={styles.actionRow}>
@@ -141,12 +274,14 @@ function StudentTable({
                         >
                           Delete
                         </button>
-                        <button
-                          style={{ ...styles.actionBtn, ...styles.duplicateBtn }}
-                          onClick={() => onDuplicate(student)}
-                        >
-                          Duplicate
-                        </button>
+                        {onDuplicate && (
+                          <button
+                            style={{ ...styles.actionBtn, ...styles.duplicateBtn }}
+                            onClick={() => onDuplicate(student)}
+                          >
+                            Duplicate
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -155,7 +290,7 @@ function StudentTable({
             </table>
           </div>
 
-          {/* Pagination controls */}
+          {/* Pagination */}
           <div style={styles.pagination}>
             <button
               style={{
@@ -169,7 +304,6 @@ function StudentTable({
               ← Previous
             </button>
 
-            {/* Page number buttons */}
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
@@ -187,12 +321,9 @@ function StudentTable({
               style={{
                 ...styles.pageBtn,
                 opacity: currentPage === totalPages ? 0.5 : 1,
-                cursor:
-                  currentPage === totalPages ? 'not-allowed' : 'pointer',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
               }}
-              onClick={() =>
-                setCurrentPage((p) => Math.min(totalPages, p + 1))
-              }
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
               Next →
@@ -200,7 +331,9 @@ function StudentTable({
           </div>
 
           <div style={styles.pageInfo}>
-            Showing {startIndex + 1}–{Math.min(startIndex + STUDENTS_PER_PAGE, students.length)} of {students.length} students
+            Showing {startIndex + 1}–
+            {Math.min(startIndex + STUDENTS_PER_PAGE, students.length)} of{' '}
+            {students.length} students
           </div>
         </>
       )}
@@ -208,10 +341,10 @@ function StudentTable({
   );
 }
 
-// ── Styles ────────────────────────────────────────
+// ── Styles ───────────────────────────────────────
 const styles = {
   container: {
-    maxWidth: '1200px',
+    maxWidth: '1400px',
     margin: '20px auto',
     padding: '20px',
     backgroundColor: '#f9f9f9',
@@ -219,63 +352,98 @@ const styles = {
     fontFamily: 'Arial, sans-serif',
     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
   },
-  heading: {
-    textAlign: 'center',
-    color: '#333',
-    marginBottom: '20px',
+  heading: { textAlign: 'center', color: '#333', marginBottom: '20px' },
+
+  // Filter bar
+  filterBar: {
+    display: 'flex',
+    gap: '10px',
+    marginBottom: '16px',
+    flexWrap: 'wrap',
+    alignItems: 'center',
   },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
+  filterInput: {
+    flex: '1 1 240px',
+    padding: '9px 14px',
+    border: '1px solid #ccc',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontFamily: 'inherit',
+    minWidth: '200px',
+    outline: 'none',
+  },
+  filterSelect: {
+    padding: '9px 14px',
+    border: '1px solid #ccc',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontFamily: 'inherit',
+    cursor: 'pointer',
     backgroundColor: '#fff',
+    minWidth: '160px',
   },
-  headerRow: {
-    backgroundColor: '#007bff',
+  clearBtn: {
+    padding: '9px 14px',
+    backgroundColor: '#dc3545',
     color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
   },
-  bodyRow: {
-    borderBottom: '1px solid #ddd',
-  },
-  th: {
-    padding: '10px',
-    textAlign: 'left',
-    fontSize: '14px',
-  },
-  td: {
-    padding: '10px',
-    fontSize: '14px',
-    verticalAlign: 'middle',
-  },
+
+  // Table
+  table: { width: '100%', borderCollapse: 'collapse', backgroundColor: '#fff' },
+  headerRow: { backgroundColor: '#007bff', color: 'white' },
+  bodyRow: { borderBottom: '1px solid #ddd' },
+  th: { padding: '10px', textAlign: 'left', fontSize: '13px', whiteSpace: 'nowrap' },
+  td: { padding: '10px', fontSize: '13px', verticalAlign: 'middle' },
   img: {
-    width: '50px',
-    height: '50px',
+    width: '45px',
+    height: '45px',
     objectFit: 'cover',
     borderRadius: '50%',
     border: '1px solid #ccc',
   },
-  actionRow: {
-    display: 'flex',
-    gap: '8px',       // ← nice spacing between the 3 buttons
-    flexWrap: 'wrap',
+
+  nameCell: { display: 'flex', flexDirection: 'column' },
+  subText: { fontSize: '11px', color: '#6b7280', marginTop: '2px' },
+  mutedText: { color: '#9ca3af' },
+
+  admBadge: {
+    backgroundColor: '#eef3fb',
+    color: '#4a72c4',
+    padding: '3px 8px',
+    borderRadius: '4px',
+    fontSize: '11px',
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
   },
+
+  statusBadge: {
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '11px',
+    fontWeight: 'bold',
+    textTransform: 'capitalize',
+  },
+
+  actionRow: { display: 'flex', gap: '6px', flexWrap: 'wrap' },
   actionBtn: {
-    padding: '6px 12px',
+    padding: '5px 10px',
     border: 'none',
     borderRadius: '4px',
     color: 'white',
     cursor: 'pointer',
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: 'bold',
   },
-  editBtn: {
-    backgroundColor: '#28a745',
-  },
-  deleteBtn: {
-    backgroundColor: '#dc3545',
-  },
-  duplicateBtn: {
-    backgroundColor: '#17a2b8',
-  },
+  editBtn: { backgroundColor: '#28a745' },
+  deleteBtn: { backgroundColor: '#dc3545' },
+  duplicateBtn: { backgroundColor: '#17a2b8' },
+
   pagination: {
     display: 'flex',
     justifyContent: 'center',
@@ -293,7 +461,6 @@ const styles = {
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: 'bold',
-    transition: 'background-color 0.15s ease, transform 0.1s ease',
   },
   pageBtnActive: {
     backgroundColor: '#007bff',
@@ -306,18 +473,8 @@ const styles = {
     color: '#666',
     fontSize: '13px',
   },
-  info: {
-    textAlign: 'center',
-    color: '#666',
-    margin: '20px',
-    fontFamily: 'Arial, sans-serif',
-  },
-  error: {
-    textAlign: 'center',
-    color: '#dc3545',
-    margin: '20px',
-    fontFamily: 'Arial, sans-serif',
-  },
+  info: { textAlign: 'center', color: '#666', margin: '20px' },
+  error: { textAlign: 'center', color: '#dc3545', margin: '20px' },
 };
 
 export default StudentTable;

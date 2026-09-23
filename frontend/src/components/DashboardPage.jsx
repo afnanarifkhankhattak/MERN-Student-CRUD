@@ -2,54 +2,93 @@
 
 import { useState, useEffect } from 'react';
 import './DashboardPage.css';
-import { STUDENTS_URL, TEACHERS_URL, FEES_URL, COURSES_URL, apiFetch } from '../api';
+import {
+  STUDENTS_URL,
+  TEACHERS_URL,
+  FEES_URL,
+  COURSES_URL,
+  CLASSES_URL,
+  SECTIONS_URL,
+  SUBJECTS_URL,
+  apiFetch,
+} from '../api';
 
 function DashboardPage() {
+  // ── Data state ────────────────────────────────
   const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [teachers, setTeachers] = useState([]);
-  const [feeTotals, setFeeTotals] = useState({ totalAmount: 0, totalPaid: 0, totalBalance: 0 });
   const [courses, setCourses] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [feeTotals, setFeeTotals] = useState({
+    totalAmount: 0,
+    totalPaid: 0,
+    totalBalance: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const load = async () => {
-    try {
-      const [studentsRes, teachersRes, feesRes, coursesRes] = await Promise.all([
-        apiFetch(STUDENTS_URL),
-        apiFetch(TEACHERS_URL),
-        apiFetch(FEES_URL),
-        apiFetch(COURSES_URL),
-      ]);
-      const sData = await studentsRes.json();
-      const tData = await teachersRes.json();
-      const fData = await feesRes.json();
-      const cData = await coursesRes.json();
+  // ── Load everything in parallel ────────────────
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [
+          studentsRes,
+          teachersRes,
+          feesRes,
+          coursesRes,
+          classesRes,
+          sectionsRes,
+          subjectsRes,
+        ] = await Promise.all([
+          apiFetch(STUDENTS_URL),
+          apiFetch(TEACHERS_URL),
+          apiFetch(FEES_URL),
+          apiFetch(COURSES_URL),
+          apiFetch(CLASSES_URL),
+          apiFetch(SECTIONS_URL),
+          apiFetch(SUBJECTS_URL),
+        ]);
 
-      if (studentsRes.ok) setStudents(sData.data || []);
-      if (teachersRes.ok) setTeachers(tData.data || []);
-      if (feesRes.ok) {
-        setFeeTotals({
-          totalAmount: fData.totalAmount || 0,
-          totalPaid: fData.totalPaid || 0,
-          totalBalance: fData.totalBalance || 0,
-        });
+        const sData = await studentsRes.json();
+        const tData = await teachersRes.json();
+        const fData = await feesRes.json();
+        const cData = await coursesRes.json();
+        const clData = await classesRes.json();
+        const secData = await sectionsRes.json();
+        const subData = await subjectsRes.json();
+
+        if (studentsRes.ok) setStudents(sData.data || []);
+        if (teachersRes.ok) setTeachers(tData.data || []);
+        if (coursesRes.ok) setCourses(cData.data || []);
+        if (classesRes.ok) setClasses(clData.data || []);
+        if (sectionsRes.ok) setSections(secData.data || []);
+        if (subjectsRes.ok) setSubjects(subData.data || []);
+        if (feesRes.ok) {
+          setFeeTotals({
+            totalAmount: fData.totalAmount || 0,
+            totalPaid: fData.totalPaid || 0,
+            totalBalance: fData.totalBalance || 0,
+          });
+        }
+      } catch (e) {
+        console.error('Failed to load dashboard data', e);
+      } finally {
+        setLoading(false);
       }
-      if (coursesRes.ok) setCourses(cData.data || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-  load();
-}, []);
-  // ── Compute stats from real data ───────────
-  const totalStudents = students.length;
- const totalTeachers = teachers.length;   // placeholder until we build Teachers module
-  // const totalFees = 296000;   // placeholder until we build Fees module
-  const recentStudents = students.slice(0, 5);
+    };
+    load();
+  }, []);
 
-  // Count by department for the donut chart (simplified)
+  // ── Derived stats ──────────────────────────────
+  const totalStudents = students.length;
+  const activeStudents = students.filter((s) => s.status === 'active').length;
+  const totalTeachers = teachers.length;
+  const totalClasses = classes.length;
+  const totalSections = sections.length;
+  const totalSubjects = subjects.length;
+
+  // Department breakdown for the donut (using the legacy department field)
   const deptCounts = {};
   students.forEach((s) => {
     if (s.department) {
@@ -60,11 +99,13 @@ useEffect(() => {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4);
 
+  const recentStudents = students.slice(0, 5);
+
   return (
     <div className="dash-grid">
-      {/* ── Top stat cards ─────────────────── */}
+      {/* ── Row 1 of stat cards ─────────────── */}
       <div className="stat-card">
-        <div className="stat-icon blue"></div>
+        <div className="stat-icon blue">👨‍🎓</div>
         <div>
           <div className="stat-label">Total Students</div>
           <div className="stat-value">{totalStudents}</div>
@@ -72,7 +113,15 @@ useEffect(() => {
       </div>
 
       <div className="stat-card">
-        <div className="stat-icon purple"></div>
+        <div className="stat-icon green">✅</div>
+        <div>
+          <div className="stat-label">Active Students</div>
+          <div className="stat-value">{activeStudents}</div>
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-icon purple">👨‍🏫</div>
         <div>
           <div className="stat-label">Teachers</div>
           <div className="stat-value">{totalTeachers}</div>
@@ -80,26 +129,45 @@ useEffect(() => {
       </div>
 
       <div className="stat-card">
-  <div className="stat-icon green">💰</div>
-  <div>
-    <div className="stat-label">Collected Fees</div>
-    <div className="stat-value">Rs {feeTotals.totalPaid.toLocaleString()}</div>
-  </div>
-</div>
-
-<div className="stat-card">
-  <div className="stat-icon orange">📚</div>
-  <div>
-    <div className="stat-label">Active Courses</div>
-    <div className="stat-value">{courses.length}</div>
-  </div>
-</div>
-
-      <div className="stat-card">
-        <div className="stat-icon orange"></div>
+        <div className="stat-icon orange">📚</div>
         <div>
           <div className="stat-label">Active Courses</div>
-          <div className="stat-value">12</div>
+          <div className="stat-value">{courses.length}</div>
+        </div>
+      </div>
+
+      {/* ── Row 2 of stat cards ─────────────── */}
+      <div className="stat-card">
+        <div className="stat-icon blue">🏫</div>
+        <div>
+          <div className="stat-label">Classes</div>
+          <div className="stat-value">{totalClasses}</div>
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-icon purple">🔤</div>
+        <div>
+          <div className="stat-label">Sections</div>
+          <div className="stat-value">{totalSections}</div>
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-icon orange">📖</div>
+        <div>
+          <div className="stat-label">Subjects</div>
+          <div className="stat-value">{totalSubjects}</div>
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-icon green">💰</div>
+        <div>
+          <div className="stat-label">Collected Fees</div>
+          <div className="stat-value">
+            Rs {feeTotals.totalPaid.toLocaleString()}
+          </div>
         </div>
       </div>
 
@@ -126,13 +194,43 @@ useEffect(() => {
               <li key={dept}>
                 <span
                   className="legend-dot"
-                  style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }}
+                  style={{
+                    backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length],
+                  }}
                 />
                 <span className="legend-label">{dept}</span>
                 <span className="legend-count">{count}</span>
               </li>
             ))}
           </ul>
+        </div>
+      </div>
+
+      {/* ── Outstanding fees panel ────────── */}
+      <div className="panel">
+        <div className="panel-header">
+          <h3>Fee Summary</h3>
+          <span className="panel-tag">Live</span>
+        </div>
+        <div style={feePanelStyle}>
+          <div style={feeRowStyle}>
+            <span style={feeLabelStyle}>Total Billed</span>
+            <span style={feeValueStyle}>
+              Rs {feeTotals.totalAmount.toLocaleString()}
+            </span>
+          </div>
+          <div style={feeRowStyle}>
+            <span style={feeLabelStyle}>Collected</span>
+            <span style={{ ...feeValueStyle, color: '#10b981' }}>
+              Rs {feeTotals.totalPaid.toLocaleString()}
+            </span>
+          </div>
+          <div style={feeRowStyle}>
+            <span style={feeLabelStyle}>Outstanding</span>
+            <span style={{ ...feeValueStyle, color: '#dc3545' }}>
+              Rs {feeTotals.totalBalance.toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -192,8 +290,8 @@ useEffect(() => {
               <tr>
                 <th>Student</th>
                 <th>Reg No</th>
-                <th>Department</th>
-                <th>Semester</th>
+                <th>Class</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -205,15 +303,40 @@ useEffect(() => {
                         src={s.picture}
                         alt={s.name}
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/30?text=?';
+                          e.target.src =
+                            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIzMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjZTVlN2ViIi8+PC9zdmc+';
                         }}
                       />
                       <span>{s.name}</span>
                     </div>
                   </td>
                   <td>{s.regNo}</td>
-                  <td>{s.department}</td>
-                  <td>{s.semester}</td>
+                  <td>{s.class?.name || '—'}</td>
+                  <td>
+                    <span
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        textTransform: 'capitalize',
+                        backgroundColor:
+                          s.status === 'active'
+                            ? '#d4edda'
+                            : s.status === 'alumni'
+                            ? '#dbeafe'
+                            : '#f1f3f5',
+                        color:
+                          s.status === 'active'
+                            ? '#155724'
+                            : s.status === 'alumni'
+                            ? '#1e40af'
+                            : '#6b7280',
+                      }}
+                    >
+                      {s.status || 'active'}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -224,7 +347,7 @@ useEffect(() => {
   );
 }
 
-// ── Helpers ──────────────────────────────────────
+// ── Helpers ───────────────────────────────────────
 const DONUT_COLORS = ['#4a72c4', '#7a9df0', '#a7c0f7', '#1e2a4a'];
 
 function buildDonutGradient(topDepts, total) {
@@ -236,7 +359,6 @@ function buildDonutGradient(topDepts, total) {
     const to = (acc / total) * 100;
     return `${DONUT_COLORS[i % DONUT_COLORS.length]} ${from}% ${to}%`;
   });
-  // Remaining %
   const remaining = 100 - (acc / total) * 100;
   if (remaining > 0) {
     stops.push(`#e5e7eb ${(acc / total) * 100}% 100%`);
@@ -272,5 +394,32 @@ function MiniCalendar() {
     </div>
   );
 }
+
+// ── Fee panel inline styles ──────────────────────
+const feePanelStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  paddingTop: '6px',
+};
+
+const feeRowStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '8px 0',
+  borderBottom: '1px solid #eef1f6',
+};
+
+const feeLabelStyle = {
+  fontSize: '13px',
+  color: '#6b7280',
+};
+
+const feeValueStyle = {
+  fontSize: '15px',
+  fontWeight: 'bold',
+  color: '#1e2a4a',
+};
 
 export default DashboardPage;
