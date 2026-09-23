@@ -20,8 +20,11 @@ export const CLASS_SUBJECTS_URL = `${API_BASE}/class-subjects`;
 // ── Parent endpoint ─────────────────────────────
 export const PARENTS_URL = `${API_BASE}/parents`;
 
-// ── NEW: Enrollment endpoint ────────────────────
+// ── Enrollment endpoint ─────────────────────────
 export const ENROLLMENTS_URL = `${API_BASE}/enrollments`;
+
+// ── NEW: Attendance endpoint ────────────────────
+export const ATTENDANCE_URL = `${API_BASE}/attendance`;
 
 // ── Token storage helpers ────────────────────────
 export const getToken = () => localStorage.getItem('token');

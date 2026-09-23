@@ -16,9 +16,10 @@ import ClassesAdmin from './ClassesAdmin';
 import SectionsAdmin from './SectionsAdmin';
 import SubjectsAdmin from './SubjectsAdmin';
 import ParentsAdmin from './ParentsAdmin';
-
-// NEW: Enrollment import
 import EnrollmentsAdmin from './EnrollmentsAdmin';
+
+// NEW: Attendance import
+import AttendanceAdmin from './AttendanceAdmin';
 
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
@@ -148,6 +149,10 @@ function AdminPage({ username, onLogout }) {
       case 'fees':
         return <FeesAdmin showToast={show} />;
 
+      // NEW: Attendance
+      case 'attendance':
+        return <AttendanceAdmin showToast={show} />;
+
       case 'courses':
         return <CoursesAdmin showToast={show} />;
 
@@ -164,7 +169,6 @@ function AdminPage({ username, onLogout }) {
       case 'subjects':
         return <SubjectsAdmin showToast={show} />;
 
-      // NEW: Enrollments
       case 'enrollments':
         return <EnrollmentsAdmin showToast={show} />;
 

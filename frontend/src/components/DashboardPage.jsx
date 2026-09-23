@@ -10,10 +10,12 @@ import {
   CLASSES_URL,
   SECTIONS_URL,
   SUBJECTS_URL,
+  ATTENDANCE_URL,
   apiFetch,
 } from '../api';
 
 function DashboardPage() {
+  // ── State: data ────────────────────────────────
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -25,12 +27,22 @@ function DashboardPage() {
     totalPaid: 0,
     totalBalance: 0,
   });
+  const [todayAttendance, setTodayAttendance] = useState({
+    total: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    leave: 0,
+    percentage: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   // ── Load everything in parallel ────────────────
   useEffect(() => {
     const load = async () => {
       try {
+        const today = new Date().toISOString().split('T')[0];
+
         const [
           studentsRes,
           teachersRes,
@@ -39,6 +51,7 @@ function DashboardPage() {
           classesRes,
           sectionsRes,
           subjectsRes,
+          attendanceRes,
         ] = await Promise.all([
           apiFetch(STUDENTS_URL),
           apiFetch(TEACHERS_URL),
@@ -47,6 +60,7 @@ function DashboardPage() {
           apiFetch(CLASSES_URL),
           apiFetch(SECTIONS_URL),
           apiFetch(SUBJECTS_URL),
+          apiFetch(`${ATTENDANCE_URL}?date=${today}`),
         ]);
 
         const sData = await studentsRes.json();
@@ -56,6 +70,7 @@ function DashboardPage() {
         const clData = await classesRes.json();
         const secData = await sectionsRes.json();
         const subData = await subjectsRes.json();
+        const aData = await attendanceRes.json();
 
         if (studentsRes.ok) setStudents(sData.data || []);
         if (teachersRes.ok) setTeachers(tData.data || []);
@@ -63,12 +78,25 @@ function DashboardPage() {
         if (classesRes.ok) setClasses(clData.data || []);
         if (sectionsRes.ok) setSections(secData.data || []);
         if (subjectsRes.ok) setSubjects(subData.data || []);
+
         if (feesRes.ok) {
           setFeeTotals({
             totalAmount: fData.totalAmount || 0,
             totalPaid: fData.totalPaid || 0,
             totalBalance: fData.totalBalance || 0,
           });
+        }
+
+        if (attendanceRes.ok) {
+          const records = aData.data || [];
+          const present = records.filter((r) => r.status === 'present').length;
+          const absent = records.filter((r) => r.status === 'absent').length;
+          const late = records.filter((r) => r.status === 'late').length;
+          const leave = records.filter((r) => r.status === 'leave').length;
+          const total = records.length;
+          const attended = present + late;
+          const percentage = total > 0 ? Math.round((attended / total) * 100) : 0;
+          setTodayAttendance({ total, present, absent, late, leave, percentage });
         }
       } catch (e) {
         console.error('Failed to load dashboard data', e);
@@ -85,7 +113,6 @@ function DashboardPage() {
 
   const totalTeachers = teachers.length;
   const activeTeachers = teachers.filter((t) => t.status === 'active').length;
-  const resignedTeachers = teachers.filter((t) => t.status === 'resigned').length;
 
   const totalClasses = classes.length;
   const totalSections = sections.length;
@@ -104,9 +131,10 @@ function DashboardPage() {
 
   const recentStudents = students.slice(0, 5);
 
+  // ── Render ─────────────────────────────────────
   return (
     <div className="dash-grid">
-      {/* ── Row 1: Students ─────────────────── */}
+      {/* ── Row 1 of stat cards ─────────────── */}
       <div className="stat-card">
         <div className="stat-icon blue">👨‍🎓</div>
         <div>
@@ -139,7 +167,7 @@ function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Row 2: Academic + Fees ───────────── */}
+      {/* ── Row 2 of stat cards ─────────────── */}
       <div className="stat-card">
         <div className="stat-icon blue">🏫</div>
         <div>
@@ -174,7 +202,7 @@ function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Donut chart ────────────────────── */}
+      {/* ── Donut chart: students by dept ──── */}
       <div className="panel donut-panel">
         <div className="panel-header">
           <h3>Students by Department</h3>
@@ -183,7 +211,9 @@ function DashboardPage() {
         <div className="donut-wrap">
           <div
             className="donut"
-            style={{ background: buildDonutGradient(topDepts, totalStudents) }}
+            style={{
+              background: buildDonutGradient(topDepts, totalStudents),
+            }}
           >
             <div className="donut-center">
               <div className="donut-number">{totalStudents}</div>
@@ -205,6 +235,15 @@ function DashboardPage() {
             ))}
           </ul>
         </div>
+      </div>
+
+      {/* ── Today's Attendance widget ──────── */}
+      <div className="panel">
+        <div className="panel-header">
+          <h3>Today's Attendance</h3>
+          <span className="panel-tag">Live</span>
+        </div>
+        <AttendanceWidget data={todayAttendance} />
       </div>
 
       {/* ── Fee Summary panel ──────────────── */}
@@ -275,7 +314,7 @@ function DashboardPage() {
         <MiniCalendar />
       </div>
 
-      {/* ── Recent students ────────────────── */}
+      {/* ── Recent students table ──────────── */}
       <div className="panel recent-panel">
         <div className="panel-header">
           <h3>Recently Added Students</h3>
@@ -348,7 +387,111 @@ function DashboardPage() {
   );
 }
 
-// ── Helpers ──────────────────────────────────────
+// ════════════════════════════════════════════════
+// Helper components & utilities
+// ════════════════════════════════════════════════
+
+// ── Attendance Widget ──────────────────────────
+function AttendanceWidget({ data }) {
+  const { total, present, absent, late, leave, percentage } = data;
+
+  const tierColor = (pct) => {
+    if (pct >= 90) return '#10b981';
+    if (pct >= 75) return '#4a72c4';
+    if (pct >= 60) return '#f59e0b';
+    return '#dc3545';
+  };
+
+  if (total === 0) {
+    return (
+      <div style={widgetStyles.empty}>
+        <div style={widgetStyles.emptyIcon}>📭</div>
+        <div style={widgetStyles.emptyText}>No attendance marked today.</div>
+        <div style={widgetStyles.emptyHint}>
+          Go to Attendance → Mark Attendance to get started.
+        </div>
+      </div>
+    );
+  }
+
+  const color = tierColor(percentage);
+
+  return (
+    <div style={widgetStyles.wrap}>
+      {/* Big percentage */}
+      <div style={widgetStyles.bigWrap}>
+        <div style={{ ...widgetStyles.bigPercent, color }}>
+          {percentage}%
+        </div>
+        <div style={widgetStyles.bigLabel}>Attendance rate</div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={widgetStyles.barOuter}>
+        <div
+          style={{
+            ...widgetStyles.barInner,
+            width: `${percentage}%`,
+            backgroundColor: color,
+          }}
+        />
+      </div>
+
+      {/* Mini stats grid */}
+      <div style={widgetStyles.grid}>
+        <StatChip label="Present" value={present} color="#10b981" />
+        <StatChip label="Absent"  value={absent}  color="#dc3545" />
+        <StatChip label="Late"    value={late}    color="#f59e0b" />
+        <StatChip label="Leave"   value={leave}   color="#8b5cf6" />
+      </div>
+
+      <div style={widgetStyles.totalLine}>
+        Total marked: <strong>{total}</strong> student{total === 1 ? '' : 's'}
+      </div>
+    </div>
+  );
+}
+
+// Small chip for the mini stats
+function StatChip({ label, value, color }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '6px',
+        borderRadius: '8px',
+        backgroundColor: color + '15',
+        border: `1px solid ${color}40`,
+      }}
+    >
+      <span
+        style={{
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: color,
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </span>
+      <span
+        style={{
+          fontSize: '10px',
+          color: '#4b5563',
+          marginTop: '3px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.4px',
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ── Donut gradient builder ─────────────────────
 const DONUT_COLORS = ['#4a72c4', '#7a9df0', '#a7c0f7', '#1e2a4a'];
 
 function buildDonutGradient(topDepts, total) {
@@ -367,6 +510,7 @@ function buildDonutGradient(topDepts, total) {
   return `conic-gradient(${stops.join(', ')})`;
 }
 
+// ── Mini calendar ──────────────────────────────
 function MiniCalendar() {
   const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const totalDays = 30;
@@ -395,7 +539,7 @@ function MiniCalendar() {
   );
 }
 
-// ── Fee panel inline styles ──────────────────────
+// ── Fee panel inline styles ────────────────────
 const feePanelStyle = {
   display: 'flex',
   flexDirection: 'column',
@@ -420,6 +564,74 @@ const feeValueStyle = {
   fontSize: '15px',
   fontWeight: 'bold',
   color: '#1e2a4a',
+};
+
+// ── Widget styles ──────────────────────────────
+const widgetStyles = {
+  wrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    paddingTop: '6px',
+  },
+  bigWrap: {
+    textAlign: 'center',
+    padding: '8px 0 4px',
+  },
+  bigPercent: {
+    fontSize: '48px',
+    fontWeight: 'bold',
+    lineHeight: 1,
+  },
+  bigLabel: {
+    fontSize: '11px',
+    color: '#6b7280',
+    marginTop: '4px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.6px',
+  },
+  barOuter: {
+    height: '8px',
+    backgroundColor: '#f1f3f5',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    marginTop: '4px',
+  },
+  barInner: {
+    height: '100%',
+    borderRadius: '4px',
+    transition: 'width 0.3s ease',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '6px',
+    marginTop: '6px',
+  },
+  totalLine: {
+    fontSize: '12px',
+    color: '#6b7280',
+    textAlign: 'center',
+    marginTop: '4px',
+  },
+  empty: {
+    padding: '20px 10px',
+    textAlign: 'center',
+  },
+  emptyIcon: {
+    fontSize: '32px',
+    marginBottom: '6px',
+  },
+  emptyText: {
+    fontSize: '14px',
+    fontWeight: 'bold',
+    color: '#4b5563',
+  },
+  emptyHint: {
+    fontSize: '12px',
+    color: '#9ca3af',
+    marginTop: '4px',
+  },
 };
 
 export default DashboardPage;

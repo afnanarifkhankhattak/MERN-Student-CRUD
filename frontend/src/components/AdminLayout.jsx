@@ -35,12 +35,14 @@ const MENU_GROUPS = [
     ],
   },
   {
-    label: 'Operations',
-    items: [
-      { id: 'courses',  label: 'Courses',  icon: '📚' },
-      { id: 'calendar', label: 'Calendar', icon: '📅' },
-    ],
-  },
+    {
+  label: 'Operations',
+  items: [
+    { id: 'attendance', label: 'Attendance', icon: '🗓️' },
+    { id: 'courses',    label: 'Courses',    icon: '📚' },
+    { id: 'calendar',   label: 'Calendar',   icon: '📅' },
+  ],
+},
   {
     label: 'Communication',
     items: [
