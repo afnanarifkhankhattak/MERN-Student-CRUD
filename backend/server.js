@@ -20,8 +20,11 @@ const sectionRoutes = require('./routes/sections');
 const subjectRoutes = require('./routes/subjects');
 const classSubjectRoutes = require('./routes/classSubjects');
 
-// ── NEW: Parent routes ──────────────────────────
+// ── Parent routes ───────────────────────────────
 const parentRoutes = require('./routes/parents');
+
+// ── NEW: Enrollment routes ──────────────────────
+const enrollmentRoutes = require('./routes/enrollments');
 
 connectDB();
 
@@ -35,7 +38,7 @@ app.get('/', (req, res) => {
   res.send('Backend is running! 🚀');
 });
 
-// ── Existing route mounts ───────────────────────
+// ── Existing mounts ─────────────────────────────
 app.use('/auth', authRoutes);
 app.use('/students', studentRoutes);
 app.use('/teachers', teacherRoutes);
@@ -49,8 +52,11 @@ app.use('/sections', sectionRoutes);
 app.use('/subjects', subjectRoutes);
 app.use('/class-subjects', classSubjectRoutes);
 
-// ── NEW: Parent mount ───────────────────────────
+// ── Parent mount ────────────────────────────────
 app.use('/parents', parentRoutes);
+
+// ── NEW: Enrollment mount ───────────────────────
+app.use('/enrollments', enrollmentRoutes);
 
 // ── Start server ────────────────────────────────
 const PORT = process.env.PORT || 5000;

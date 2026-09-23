@@ -11,19 +11,17 @@ import CoursesAdmin from './CoursesAdmin';
 import CalendarPage from './CalendarPage';
 import MessagesPage from './MessagesPage';
 import SettingsPage from './SettingsPage';
-
-// Academic Foundation imports
 import AcademicYearsAdmin from './AcademicYearsAdmin';
 import ClassesAdmin from './ClassesAdmin';
 import SectionsAdmin from './SectionsAdmin';
 import SubjectsAdmin from './SubjectsAdmin';
-
-// NEW: Parent import
 import ParentsAdmin from './ParentsAdmin';
+
+// NEW: Enrollment import
+import EnrollmentsAdmin from './EnrollmentsAdmin';
 
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
-// Simple toast helper used by AdminPage
 function useToast() {
   const [toast, setToast] = useState({ type: '', text: '' });
   const show = (type, text) => {
@@ -35,11 +33,9 @@ function useToast() {
 
 function AdminPage({ username, onLogout }) {
   const [activePage, setActivePage] = useState('dashboard');
-
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [editingStudent, setEditingStudent] = useState(null);
   const [knownDepartments, setKnownDepartments] = useState([]);
-
   const { toast, show } = useToast();
 
   // ── Students handlers ──────────────────────────
@@ -146,7 +142,6 @@ function AdminPage({ username, onLogout }) {
       case 'teachers':
         return <TeachersAdmin showToast={show} />;
 
-      // ── NEW: Parents case ────────────────────────
       case 'parents':
         return <ParentsAdmin showToast={show} />;
 
@@ -168,6 +163,10 @@ function AdminPage({ username, onLogout }) {
 
       case 'subjects':
         return <SubjectsAdmin showToast={show} />;
+
+      // NEW: Enrollments
+      case 'enrollments':
+        return <EnrollmentsAdmin showToast={show} />;
 
       case 'calendar':
         return <CalendarPage />;
@@ -194,7 +193,6 @@ function AdminPage({ username, onLogout }) {
         {renderPage()}
       </AdminLayout>
 
-      {/* Toast */}
       {toast.text && (
         <div
           style={{

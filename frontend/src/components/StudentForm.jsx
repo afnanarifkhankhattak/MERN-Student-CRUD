@@ -6,7 +6,8 @@ import {
   CLASSES_URL,
   SECTIONS_URL,
   ACADEMIC_YEARS_URL,
-  PARENTS_URL,                      // ← NEW
+  PARENTS_URL,
+  ENROLLMENTS_URL,
   apiFetch,
 } from '../api';
 
@@ -266,60 +267,120 @@ function StudentForm({
     setErrors({});
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage({ type: '', text: '' });
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setMessage({ type: '', text: '' });
 
-    if (!validateAll()) {
-      setMessage({
-        type: 'error',
-        text: 'Please fix the errors below and try again.',
-      });
-      return;
-    }
+  if (!validateAll()) {
+    setMessage({
+      type: 'error',
+      text: 'Please fix the errors below and try again.',
+    });
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const url = isEditMode ? `${API_URL}/${editingStudent._id}` : API_URL;
-      const method = isEditMode ? 'PUT' : 'POST';
+  try {
+    const url = isEditMode ? `${API_URL}/${editingStudent._id}` : API_URL;
+    const method = isEditMode ? 'PUT' : 'POST';
 
-      // Convert empty reference strings to null
-      const payload = {
-        ...formData,
-        class: formData.class || null,
-        section: formData.section || null,
-        academicYear: formData.academicYear || null,
-        parent: formData.parent || null,   // ← NEW
-      };
+    // Convert empty reference strings to null
+    const payload = {
+      ...formData,
+      class: formData.class || null,
+      section: formData.section || null,
+      academicYear: formData.academicYear || null,
+      parent: formData.parent || null,
+    };
 
-      const response = await apiFetch(url, {
-        method,
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
+    const response = await apiFetch(url, {
+      method,
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
 
-      if (!response.ok) throw new Error(data.message || 'Something went wrong');
+    if (!response.ok) throw new Error(data.message || 'Something went wrong');
 
-      setMessage({
-        type: 'success',
-        text: isEditMode
-          ? 'Student updated successfully! ✅'
-          : 'Student saved successfully! ✅',
-      });
-      resetForm();
+    // ── AUTO-ENROLLMENT LOGIC ─────────────────────
+    // After a successful creation (not edit), if class+section+year
+    // are all set, silently create an enrollment.
+    let enrollmentNote = '';
+    if (
+      !isEditMode &&
+      formData.class &&
+      formData.section &&
+      formData.academicYear
+    ) {
+      try {
+        // Step 1: fetch next roll number
+        const rollUrl = `${ENROLLMENTS_URL}/next-roll?class=${formData.class}&section=${formData.section}&academicYear=${formData.academicYear}`;
+        const rollRes = await apiFetch(rollUrl);
+        const rollData = await rollRes.json();
 
-      if (isEditMode) {
-        if (onUpdateComplete) onUpdateComplete();
-      } else {
+        if (!rollRes.ok) {
+          throw new Error(rollData.message || 'Could not get next roll');
+        }
+
+        const rollNo = rollData.data.nextRoll;
+
+        // Step 2: create the enrollment
+        const enrollRes = await apiFetch(ENROLLMENTS_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            student: data.data._id,
+            class: formData.class,
+            section: formData.section,
+            academicYear: formData.academicYear,
+            rollNo,
+            enrolledDate: new Date().toISOString().split('T')[0],
+            status: 'active',
+            remarks: 'Auto-created with student',
+          }),
+        });
+        const enrollData = await enrollRes.json();
+
+        if (!enrollRes.ok) {
+          throw new Error(enrollData.message || 'Enrollment failed');
+        }
+
+        // Get the class name for a friendly message
+        const className =
+          classes.find((c) => c._id === formData.class)?.name || 'class';
+        enrollmentNote = ` & enrolled in ${className}`;
+      } catch (enrollErr) {
+        // The student was created successfully — do NOT fail the whole form
+        console.warn('Auto-enrollment failed:', enrollErr.message);
+        setMessage({
+          type: 'error',
+          text: `Student saved but auto-enrollment failed: ${enrollErr.message}. Add the enrollment manually from the Enrollments page.`,
+        });
+        resetForm();
         if (onStudentAdded) onStudentAdded();
+        return;
       }
-    } catch (err) {
-      setMessage({ type: 'error', text: `Error: ${err.message}` });
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // ── SUCCESS ───────────────────────────────────
+    setMessage({
+      type: 'success',
+      text: isEditMode
+        ? 'Student updated successfully! ✅'
+        : `Student saved${enrollmentNote} ✅`,
+    });
+    resetForm();
+
+    if (isEditMode) {
+      if (onUpdateComplete) onUpdateComplete();
+    } else {
+      if (onStudentAdded) onStudentAdded();
+    }
+  } catch (err) {
+    setMessage({ type: 'error', text: `Error: ${err.message}` });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCancel = () => {
     resetForm();

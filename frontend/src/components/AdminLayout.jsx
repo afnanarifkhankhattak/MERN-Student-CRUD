@@ -17,6 +17,7 @@ const MENU_GROUPS = [
       { id: 'classes',        label: 'Classes',        icon: '🏫' },
       { id: 'sections',       label: 'Sections',       icon: '🔤' },
       { id: 'subjects',       label: 'Subjects',       icon: '📖' },
+      { id: 'enrollments',    label: 'Enrollments',    icon: '🎓' },
     ],
   },
  {
