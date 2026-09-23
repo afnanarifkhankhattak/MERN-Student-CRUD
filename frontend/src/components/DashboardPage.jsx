@@ -14,7 +14,6 @@ import {
 } from '../api';
 
 function DashboardPage() {
-  // ── Data state ────────────────────────────────
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -83,12 +82,16 @@ function DashboardPage() {
   // ── Derived stats ──────────────────────────────
   const totalStudents = students.length;
   const activeStudents = students.filter((s) => s.status === 'active').length;
+
   const totalTeachers = teachers.length;
+  const activeTeachers = teachers.filter((t) => t.status === 'active').length;
+  const resignedTeachers = teachers.filter((t) => t.status === 'resigned').length;
+
   const totalClasses = classes.length;
   const totalSections = sections.length;
   const totalSubjects = subjects.length;
 
-  // Department breakdown for the donut (using the legacy department field)
+  // Department breakdown for the donut
   const deptCounts = {};
   students.forEach((s) => {
     if (s.department) {
@@ -103,7 +106,7 @@ function DashboardPage() {
 
   return (
     <div className="dash-grid">
-      {/* ── Row 1 of stat cards ─────────────── */}
+      {/* ── Row 1: Students ─────────────────── */}
       <div className="stat-card">
         <div className="stat-icon blue">👨‍🎓</div>
         <div>
@@ -123,20 +126,20 @@ function DashboardPage() {
       <div className="stat-card">
         <div className="stat-icon purple">👨‍🏫</div>
         <div>
-          <div className="stat-label">Teachers</div>
+          <div className="stat-label">Total Teachers</div>
           <div className="stat-value">{totalTeachers}</div>
         </div>
       </div>
 
       <div className="stat-card">
-        <div className="stat-icon orange">📚</div>
+        <div className="stat-icon green">👨‍🏫</div>
         <div>
-          <div className="stat-label">Active Courses</div>
-          <div className="stat-value">{courses.length}</div>
+          <div className="stat-label">Active Teachers</div>
+          <div className="stat-value">{activeTeachers}</div>
         </div>
       </div>
 
-      {/* ── Row 2 of stat cards ─────────────── */}
+      {/* ── Row 2: Academic + Fees ───────────── */}
       <div className="stat-card">
         <div className="stat-icon blue">🏫</div>
         <div>
@@ -162,16 +165,16 @@ function DashboardPage() {
       </div>
 
       <div className="stat-card">
-        <div className="stat-icon green">💰</div>
+        <div className="stat-icon orange">📉</div>
         <div>
-          <div className="stat-label">Collected Fees</div>
+          <div className="stat-label">Outstanding Fees</div>
           <div className="stat-value">
-            Rs {feeTotals.totalPaid.toLocaleString()}
+            Rs {feeTotals.totalBalance.toLocaleString()}
           </div>
         </div>
       </div>
 
-      {/* ── Donut chart: students by dept ──── */}
+      {/* ── Donut chart ────────────────────── */}
       <div className="panel donut-panel">
         <div className="panel-header">
           <h3>Students by Department</h3>
@@ -180,9 +183,7 @@ function DashboardPage() {
         <div className="donut-wrap">
           <div
             className="donut"
-            style={{
-              background: buildDonutGradient(topDepts, totalStudents),
-            }}
+            style={{ background: buildDonutGradient(topDepts, totalStudents) }}
           >
             <div className="donut-center">
               <div className="donut-number">{totalStudents}</div>
@@ -206,7 +207,7 @@ function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Outstanding fees panel ────────── */}
+      {/* ── Fee Summary panel ──────────────── */}
       <div className="panel">
         <div className="panel-header">
           <h3>Fee Summary</h3>
@@ -274,7 +275,7 @@ function DashboardPage() {
         <MiniCalendar />
       </div>
 
-      {/* ── Recent students table ──────────── */}
+      {/* ── Recent students ────────────────── */}
       <div className="panel recent-panel">
         <div className="panel-header">
           <h3>Recently Added Students</h3>
@@ -347,7 +348,7 @@ function DashboardPage() {
   );
 }
 
-// ── Helpers ───────────────────────────────────────
+// ── Helpers ──────────────────────────────────────
 const DONUT_COLORS = ['#4a72c4', '#7a9df0', '#a7c0f7', '#1e2a4a'];
 
 function buildDonutGradient(topDepts, total) {
@@ -366,11 +367,10 @@ function buildDonutGradient(topDepts, total) {
   return `conic-gradient(${stops.join(', ')})`;
 }
 
-// ── Mini calendar ────────────────────────────────
 function MiniCalendar() {
   const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const totalDays = 30;
-  const startOffset = 2; // Sep 2026 starts on Tue
+  const startOffset = 2;
 
   const cells = [];
   for (let i = 0; i < startOffset; i++) cells.push(null);
