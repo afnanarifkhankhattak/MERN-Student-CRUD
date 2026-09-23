@@ -19,13 +19,14 @@ const MENU_GROUPS = [
       { id: 'subjects',       label: 'Subjects',       icon: '📖' },
     ],
   },
-  {
-    label: 'People',
-    items: [
-      { id: 'students', label: 'Students', icon: '👨‍🎓' },
-      { id: 'teachers', label: 'Teachers', icon: '👨‍🏫' },
-    ],
-  },
+ {
+  label: 'People',
+  items: [
+    { id: 'students', label: 'Students', icon: '👨‍🎓' },
+    { id: 'teachers', label: 'Teachers', icon: '👨‍🏫' },
+    { id: 'parents',  label: 'Parents',  icon: '👨‍👩‍👧' },
+  ],
+},
   {
     label: 'Finance',
     items: [

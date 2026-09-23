@@ -6,10 +6,10 @@ import {
   CLASSES_URL,
   SECTIONS_URL,
   ACADEMIC_YEARS_URL,
+  PARENTS_URL,                      // ← NEW
   apiFetch,
 } from '../api';
 
-// ── Form's initial empty state ──────────────────
 const EMPTY_FORM = {
   // Legacy fields
   username: '',
@@ -22,7 +22,7 @@ const EMPTY_FORM = {
   department: '',
   semester: '',
 
-  // New school-style fields
+  // School-style fields
   admissionNo: '',
   firstName: '',
   lastName: '',
@@ -33,12 +33,12 @@ const EMPTY_FORM = {
   class: '',
   section: '',
   rollNo: '',
+  parent: '',                       // ← NEW
   admissionDate: '',
   academicYear: '',
   status: 'active',
 };
 
-// ── Fixed option lists ────────────────────────────
 const DEPARTMENTS = [
   'Computer Science',
   'Software Engineering',
@@ -63,7 +63,6 @@ const STATUSES = [
   { value: 'alumni', label: 'Alumni' },
 ];
 
-// ── Validation rules ─────────────────────────────
 const validators = {
   username: (v) => {
     if (!v.trim()) return 'Username is required';
@@ -109,6 +108,7 @@ const validators = {
     }
     return '';
   },
+  // All optional — return empty error
   department: () => '',
   semester: () => '',
   admissionNo: () => '',
@@ -121,6 +121,7 @@ const validators = {
   class: () => '',
   section: () => '',
   rollNo: () => '',
+  parent: () => '',                 // ← NEW
   admissionDate: () => '',
   academicYear: () => '',
   status: () => '',
@@ -142,6 +143,7 @@ function StudentForm({
   const [classes, setClasses] = useState([]);
   const [allSections, setAllSections] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
+  const [parents, setParents] = useState([]);   // ← NEW
   const [loadingOptions, setLoadingOptions] = useState(true);
 
   const isEditMode = editingStudent !== null;
@@ -150,18 +152,21 @@ function StudentForm({
   useEffect(() => {
     const load = async () => {
       try {
-        const [classRes, sectionRes, yearRes] = await Promise.all([
+        const [classRes, sectionRes, yearRes, parentRes] = await Promise.all([
           apiFetch(CLASSES_URL),
           apiFetch(SECTIONS_URL),
           apiFetch(ACADEMIC_YEARS_URL),
+          apiFetch(PARENTS_URL),                  // ← NEW
         ]);
         const classData = await classRes.json();
         const sectionData = await sectionRes.json();
         const yearData = await yearRes.json();
+        const parentData = await parentRes.json();   // ← NEW
 
         if (classRes.ok) setClasses(classData.data || []);
         if (sectionRes.ok) setAllSections(sectionData.data || []);
         if (yearRes.ok) setAcademicYears(yearData.data || []);
+        if (parentRes.ok) setParents(parentData.data || []);   // ← NEW
       } catch (e) {
         console.error('Failed to load dropdown data', e);
       } finally {
@@ -171,10 +176,9 @@ function StudentForm({
     load();
   }, []);
 
-  // ── Filter sections by the selected class ─────
+  // Filter sections by selected class
   const filteredSections = allSections.filter((s) => {
-    const sectionClassId =
-      typeof s.class === 'object' ? s.class?._id : s.class;
+    const sectionClassId = typeof s.class === 'object' ? s.class?._id : s.class;
     return sectionClassId === formData.class;
   });
 
@@ -182,7 +186,6 @@ function StudentForm({
   useEffect(() => {
     if (editingStudent) {
       setFormData({
-        // Legacy
         username: editingStudent.username || '',
         regNo: editingStudent.regNo || '',
         name: editingStudent.name || '',
@@ -193,7 +196,6 @@ function StudentForm({
         department: editingStudent.department || '',
         semester: editingStudent.semester ?? '',
 
-        // New
         admissionNo: editingStudent.admissionNo || '',
         firstName: editingStudent.firstName || '',
         lastName: editingStudent.lastName || '',
@@ -210,6 +212,11 @@ function StudentForm({
             ? editingStudent.section._id
             : editingStudent.section || '',
         rollNo: editingStudent.rollNo || '',
+        // ← NEW: handle the populated parent
+        parent:
+          typeof editingStudent.parent === 'object' && editingStudent.parent
+            ? editingStudent.parent._id
+            : editingStudent.parent || '',
         admissionDate: editingStudent.admissionDate || '',
         academicYear:
           typeof editingStudent.academicYear === 'object' &&
@@ -226,15 +233,12 @@ function StudentForm({
     }
   }, [editingStudent]);
 
-  // ── Handle input changes ──────────────────────
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const next = { ...prev, [name]: value };
-      // When class changes, reset section (it may not belong to the new class)
-      if (name === 'class') {
-        next.section = '';
-      }
+      // Reset section when class changes
+      if (name === 'class') next.section = '';
       return next;
     });
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -247,7 +251,6 @@ function StudentForm({
     }
   };
 
-  // ── Validate ──────────────────────────────────
   const validateAll = () => {
     const newErrors = {};
     Object.keys(validators).forEach((field) => {
@@ -258,13 +261,11 @@ function StudentForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  // ── Reset ─────────────────────────────────────
   const resetForm = () => {
     setFormData(EMPTY_FORM);
     setErrors({});
   };
 
-  // ── Submit ────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
@@ -283,13 +284,13 @@ function StudentForm({
       const url = isEditMode ? `${API_URL}/${editingStudent._id}` : API_URL;
       const method = isEditMode ? 'PUT' : 'POST';
 
-      // Convert empty reference strings to null so Mongoose doesn't
-      // try to cast "" to an ObjectId
+      // Convert empty reference strings to null
       const payload = {
         ...formData,
         class: formData.class || null,
         section: formData.section || null,
         academicYear: formData.academicYear || null,
+        parent: formData.parent || null,   // ← NEW
       };
 
       const response = await apiFetch(url, {
@@ -329,7 +330,6 @@ function StudentForm({
   const renderError = (field) =>
     errors[field] ? <span style={styles.errorText}>{errors[field]}</span> : null;
 
-  // ── Render ────────────────────────────────────
   return (
     <div style={styles.container}>
       <h2 style={styles.heading}>
@@ -357,10 +357,9 @@ function StudentForm({
       )}
 
       <form onSubmit={handleSubmit} style={styles.form} noValidate>
-        {/* ── Section heading: Basic info ──── */}
+        {/* Basic Information */}
         <h3 style={styles.sectionHeading}>Basic Information</h3>
 
-        {/* Row 1: Username + Reg No */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>Username *</label>
@@ -391,7 +390,6 @@ function StudentForm({
           </div>
         </div>
 
-        {/* Row 2: Full name + picture */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>Full Name *</label>
@@ -422,10 +420,9 @@ function StudentForm({
           </div>
         </div>
 
-        {/* ── Section heading: Personal ──── */}
+        {/* Personal Details */}
         <h3 style={styles.sectionHeading}>Personal Details</h3>
 
-        {/* Row 3: First + Last */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>First Name</label>
@@ -451,7 +448,6 @@ function StudentForm({
           </div>
         </div>
 
-        {/* Row 4: DOB + Gender */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>Date of Birth</label>
@@ -493,7 +489,6 @@ function StudentForm({
           </div>
         </div>
 
-        {/* Row 5: Contact info */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>Phone *</label>
@@ -536,7 +531,6 @@ function StudentForm({
           </div>
         </div>
 
-        {/* Row 6: Address */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>Address</label>
@@ -551,10 +545,9 @@ function StudentForm({
           </div>
         </div>
 
-        {/* ── Section heading: Academic ──── */}
+        {/* Academic Details */}
         <h3 style={styles.sectionHeading}>Academic Details</h3>
 
-        {/* Row 7: Admission No + Admission Date */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>Admission Number</label>
@@ -596,7 +589,7 @@ function StudentForm({
           </div>
         </div>
 
-        {/* Row 8: Class + Section (cascading) */}
+        {/* Class + Section + Roll No */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>Class</label>
@@ -649,7 +642,42 @@ function StudentForm({
           </div>
         </div>
 
-        {/* Row 9: Legacy department + semester */}
+        {/* ← NEW: Parent + Status */}
+        <div style={styles.row}>
+          <div style={{ ...styles.field, flex: '2 1 300px' }}>
+            <label style={styles.label}>Parent / Guardian</label>
+            <select
+              name="parent"
+              value={formData.parent}
+              onChange={handleChange}
+              disabled={loadingOptions}
+              style={{ ...styles.input, ...styles.select }}
+            >
+              <option value="">-- Unassigned --</option>
+              {parents.map((p) => (
+                <option key={p._id} value={p._id}>
+                  {p.name} ({p.relation})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.label}>Status</label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              style={{ ...styles.input, ...styles.select }}
+            >
+              {STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Legacy fields */}
         <div style={styles.row}>
           <div style={styles.field}>
             <label style={styles.label}>Department (legacy)</label>
@@ -680,23 +708,8 @@ function StudentForm({
               ))}
             </select>
           </div>
-
-          <div style={styles.field}>
-            <label style={styles.label}>Status</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              style={{ ...styles.input, ...styles.select }}
-            >
-              {STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
         </div>
 
-        {/* Buttons */}
         <div style={styles.buttonRow}>
           <button
             type="submit"
@@ -730,7 +743,7 @@ function StudentForm({
   );
 }
 
-// ── Styles ───────────────────────────────────────
+// ── Styles (unchanged from previous step) ───────
 const styles = {
   container: {
     maxWidth: '1000px',
