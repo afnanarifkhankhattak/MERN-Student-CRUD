@@ -20,14 +20,14 @@ const MENU_GROUPS = [
       { id: 'enrollments',    label: 'Enrollments',    icon: '🎓' },
     ],
   },
- {
-  label: 'People',
-  items: [
-    { id: 'students', label: 'Students', icon: '👨‍🎓' },
-    { id: 'teachers', label: 'Teachers', icon: '👨‍🏫' },
-    { id: 'parents',  label: 'Parents',  icon: '👨‍👩‍👧' },
-  ],
-},
+  {
+    label: 'People',
+    items: [
+      { id: 'students', label: 'Students', icon: '👨‍🎓' },
+      { id: 'teachers', label: 'Teachers', icon: '👨‍🏫' },
+      { id: 'parents',  label: 'Parents',  icon: '👨‍👩‍👧' },
+    ],
+  },
   {
     label: 'Finance',
     items: [
@@ -35,14 +35,14 @@ const MENU_GROUPS = [
     ],
   },
   {
-    {
-  label: 'Operations',
-  items: [
-    { id: 'attendance', label: 'Attendance', icon: '🗓️' },
-    { id: 'courses',    label: 'Courses',    icon: '📚' },
-    { id: 'calendar',   label: 'Calendar',   icon: '📅' },
-  ],
-},
+    label: 'Operations',
+    items: [
+      { id: 'exams',      label: 'Exams',      icon: '📝' },
+      { id: 'attendance', label: 'Attendance', icon: '🗓️' },
+      { id: 'courses',    label: 'Courses',    icon: '📚' },
+      { id: 'calendar',   label: 'Calendar',   icon: '📅' },
+    ],
+  },
   {
     label: 'Communication',
     items: [
