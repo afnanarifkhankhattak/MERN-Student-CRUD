@@ -2,17 +2,65 @@
 
 import './AdminLayout.css';
 
-// ── Sidebar menu items ─────────────────────────
-const MENU_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard',  icon: '' },
-  { id: 'students',  label: 'Students',   icon: '' },
-  { id: 'teachers',  label: 'Teachers',   icon: '' },
-  { id: 'fees',      label: 'Fees',       icon: '' },
-  { id: 'courses',   label: 'Courses',    icon: '' },
-  { id: 'calendar',  label: 'Calendar',   icon: '' },
-  { id: 'messages',  label: 'Messages',   icon: '' },
-  { id: 'settings',  label: 'Settings',   icon: '' },
+// ── Sidebar menu, organized into groups ─────────
+const MENU_GROUPS = [
+  {
+    label: null,
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    ],
+  },
+  {
+    label: 'Academics',
+    items: [
+      { id: 'academic-years', label: 'Academic Years', icon: '📆' },
+      { id: 'classes',        label: 'Classes',        icon: '🏫' },
+      { id: 'sections',       label: 'Sections',       icon: '🔤' },
+      { id: 'subjects',       label: 'Subjects',       icon: '📖' },
+    ],
+  },
+  {
+    label: 'People',
+    items: [
+      { id: 'students', label: 'Students', icon: '👨‍🎓' },
+      { id: 'teachers', label: 'Teachers', icon: '👨‍🏫' },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { id: 'fees', label: 'Fees', icon: '💰' },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { id: 'courses',  label: 'Courses',  icon: '📚' },
+      { id: 'calendar', label: 'Calendar', icon: '📅' },
+    ],
+  },
+  {
+    label: 'Communication',
+    items: [
+      { id: 'messages', label: 'Messages', icon: '💬' },
+    ],
+  },
+  {
+    label: null,
+    items: [
+      { id: 'settings', label: 'Settings', icon: '⚙️' },
+    ],
+  },
 ];
+
+// Flattened helper: get the label for a given page id
+const findLabel = (id) => {
+  for (const group of MENU_GROUPS) {
+    const found = group.items.find((item) => item.id === id);
+    if (found) return found.label;
+  }
+  return 'Dashboard';
+};
 
 function AdminLayout({ username, activePage, onNavigate, onLogout, children }) {
   return (
@@ -21,21 +69,28 @@ function AdminLayout({ username, activePage, onNavigate, onLogout, children }) {
       <aside className="admin-sidebar">
         <div className="admin-brand">
           <span className="admin-brand-icon">🎓</span>
-          <span className="admin-brand-text">StudentApp</span>
+          <span className="admin-brand-text">SchoolApp</span>
         </div>
 
         <nav className="admin-nav">
-          {MENU_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              className={`admin-nav-item ${
-                activePage === item.id ? 'active' : ''
-              }`}
-              onClick={() => onNavigate(item.id)}
-            >
-              <span className="admin-nav-icon">{item.icon}</span>
-              <span className="admin-nav-label">{item.label}</span>
-            </button>
+          {MENU_GROUPS.map((group, gi) => (
+            <div key={gi} className="admin-nav-group">
+              {group.label && (
+                <div className="admin-nav-group-label">{group.label}</div>
+              )}
+              {group.items.map((item) => (
+                <button
+                  key={item.id}
+                  className={`admin-nav-item ${
+                    activePage === item.id ? 'active' : ''
+                  }`}
+                  onClick={() => onNavigate(item.id)}
+                >
+                  <span className="admin-nav-icon">{item.icon}</span>
+                  <span className="admin-nav-label">{item.label}</span>
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -55,11 +110,10 @@ function AdminLayout({ username, activePage, onNavigate, onLogout, children }) {
 
       {/* ── MAIN AREA ────────────────────────── */}
       <main className="admin-main">
-        {/* Top bar */}
         <header className="admin-topbar">
           <div>
             <h2 className="admin-topbar-title">
-              {MENU_ITEMS.find((m) => m.id === activePage)?.label || 'Dashboard'}
+              {findLabel(activePage)}
             </h2>
             <p className="admin-topbar-subtitle">
               Welcome back, {username}! Here's what's happening today.
@@ -69,15 +123,14 @@ function AdminLayout({ username, activePage, onNavigate, onLogout, children }) {
             <input
               type="text"
               className="admin-search"
-              placeholder="Search..."
+              placeholder="🔍 Search..."
             />
             <button className="admin-icon-btn" title="Notifications">
-              
+              🔔
             </button>
           </div>
         </header>
 
-        {/* Content — whichever page was selected */}
         <section className="admin-content">{children}</section>
       </main>
     </div>

@@ -12,6 +12,12 @@ import CalendarPage from './CalendarPage';
 import MessagesPage from './MessagesPage';
 import SettingsPage from './SettingsPage';
 
+// ── NEW: Academic Foundation imports ────────────
+import AcademicYearsAdmin from './AcademicYearsAdmin';
+import ClassesAdmin from './ClassesAdmin';
+import SectionsAdmin from './SectionsAdmin';
+import SubjectsAdmin from './SubjectsAdmin';
+
 const API_URL = 'https://mern-student-crud-tlt6.onrender.com/students';
 
 // Simple toast helper used by AdminPage
@@ -27,14 +33,13 @@ function useToast() {
 function AdminPage({ username, onLogout }) {
   const [activePage, setActivePage] = useState('dashboard');
 
-  // Only kept here so Students page can use them
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [editingStudent, setEditingStudent] = useState(null);
   const [knownDepartments, setKnownDepartments] = useState([]);
 
   const { toast, show } = useToast();
 
-  // ── Handlers used by the Students page ────
+  // ── Students handlers (unchanged) ──────────────
   const handleStudentAdded = () => {
     setRefreshTrigger((p) => p + 1);
     show('success', 'Student added successfully! ✅');
@@ -108,7 +113,7 @@ function AdminPage({ username, onLogout }) {
 
   const handleDepartmentsLoaded = (depts) => setKnownDepartments(depts);
 
-  // ── Which page to render? ──────────────────
+  // ── Page router ────────────────────────────────
   const renderPage = () => {
     switch (activePage) {
       case 'dashboard':
@@ -135,23 +140,37 @@ function AdminPage({ username, onLogout }) {
           </>
         );
 
-case 'teachers':
-  return <TeachersAdmin showToast={show} />;
+      case 'teachers':
+        return <TeachersAdmin showToast={show} />;
 
-case 'fees':
-  return <FeesAdmin showToast={show} />;
+      case 'fees':
+        return <FeesAdmin showToast={show} />;
 
-case 'courses':
-  return <CoursesAdmin showToast={show} />;
+      case 'courses':
+        return <CoursesAdmin showToast={show} />;
 
-case 'calendar':
-  return <CalendarPage />;
+      // ── NEW: Academic Foundation pages ───────────
+      case 'academic-years':
+        return <AcademicYearsAdmin showToast={show} />;
 
-case 'messages':
-  return <MessagesPage />;
+      case 'classes':
+        return <ClassesAdmin showToast={show} />;
 
-case 'settings':
-  return <SettingsPage />;
+      case 'sections':
+        return <SectionsAdmin showToast={show} />;
+
+      case 'subjects':
+        return <SubjectsAdmin showToast={show} />;
+
+      case 'calendar':
+        return <CalendarPage />;
+
+      case 'messages':
+        return <MessagesPage />;
+
+      case 'settings':
+        return <SettingsPage />;
+
       default:
         return <DashboardPage />;
     }
@@ -168,7 +187,7 @@ case 'settings':
         {renderPage()}
       </AdminLayout>
 
-      {/* Toast — same as before */}
+      {/* Toast — unchanged */}
       {toast.text && (
         <div
           style={{
@@ -191,13 +210,5 @@ case 'settings':
     </>
   );
 }
-
-const placeholder = {
-  backgroundColor: '#ffffff',
-  borderRadius: '12px',
-  padding: '60px',
-  textAlign: 'center',
-  color: '#1e2a4a',
-};
 
 export default AdminPage;
