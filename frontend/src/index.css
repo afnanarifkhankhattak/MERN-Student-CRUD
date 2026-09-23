@@ -1,0 +1,47 @@
+/* Print styles for payment receipts */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .payment-receipt-printable,
+  .payment-receipt-printable * {
+    visibility: visible;
+  }
+  .payment-receipt-printable {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  .payment-receipt-printable button {
+    display: none !important;
+  }
+}
+
+/* Print styles for invoice detail */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .fee-invoice-printable,
+  .fee-invoice-printable * {
+    visibility: visible;
+  }
+  .fee-invoice-printable {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  .fee-invoice-printable button {
+    display: none !important;
+  }
+}

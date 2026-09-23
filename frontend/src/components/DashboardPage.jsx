@@ -12,6 +12,7 @@ import {
   SUBJECTS_URL,
   ATTENDANCE_URL,
   EXAMS_URL,
+  FEE_INVOICES_URL,
   apiFetch,
 } from '../api';
 
@@ -28,6 +29,13 @@ function DashboardPage() {
     totalAmount: 0,
     totalPaid: 0,
     totalBalance: 0,
+  });
+  const [feeSummary, setFeeSummary] = useState({
+    count: 0,
+    billed: 0,
+    collected: 0,
+    outstanding: 0,
+    byStatus: { unpaid: 0, partial: 0, paid: 0, overdue: 0, waived: 0 },
   });
   const [todayAttendance, setTodayAttendance] = useState({
     total: 0,
@@ -55,6 +63,7 @@ function DashboardPage() {
           subjectsRes,
           attendanceRes,
           examsRes,
+          feeSummaryRes,
         ] = await Promise.all([
           apiFetch(STUDENTS_URL),
           apiFetch(TEACHERS_URL),
@@ -65,6 +74,7 @@ function DashboardPage() {
           apiFetch(SUBJECTS_URL),
           apiFetch(`${ATTENDANCE_URL}?date=${today}`),
           apiFetch(EXAMS_URL),
+          apiFetch(`${FEE_INVOICES_URL}/summary`),
         ]);
 
         const sData = await studentsRes.json();
@@ -76,6 +86,7 @@ function DashboardPage() {
         const subData = await subjectsRes.json();
         const aData = await attendanceRes.json();
         const eData = await examsRes.json();
+        const fsData = await feeSummaryRes.json();
 
         if (studentsRes.ok) setStudents(sData.data || []);
         if (teachersRes.ok) setTeachers(tData.data || []);
@@ -91,6 +102,10 @@ function DashboardPage() {
             totalPaid: fData.totalPaid || 0,
             totalBalance: fData.totalBalance || 0,
           });
+        }
+
+        if (feeSummaryRes.ok && fsData.data) {
+          setFeeSummary(fsData.data);
         }
 
         if (attendanceRes.ok) {
@@ -265,6 +280,15 @@ function DashboardPage() {
         />
       </div>
 
+      {/* ── Fee Collections widget ─────────── */}
+      <div className="panel">
+        <div className="panel-header">
+          <h3>Fee Collections</h3>
+          <span className="panel-tag">Live</span>
+        </div>
+        <FeeWidget summary={feeSummary} />
+      </div>
+
       {/* ── Today's Attendance widget ──────── */}
       <div className="panel">
         <div className="panel-header">
@@ -274,10 +298,10 @@ function DashboardPage() {
         <AttendanceWidget data={todayAttendance} />
       </div>
 
-      {/* ── Fee Summary panel ──────────────── */}
+      {/* ── Fee Summary panel (legacy) ─────── */}
       <div className="panel">
         <div className="panel-header">
-          <h3>Fee Summary</h3>
+          <h3>Fee Summary (Legacy)</h3>
           <span className="panel-tag">Live</span>
         </div>
         <div style={feePanelStyle}>
@@ -500,20 +524,17 @@ function ExamsWidget({ total, published, ongoing, draft, recentExam }) {
 
   return (
     <div style={examsWidgetStyles.wrap}>
-      {/* Big number */}
       <div style={examsWidgetStyles.bigWrap}>
         <div style={examsWidgetStyles.bigNumber}>{total}</div>
         <div style={examsWidgetStyles.bigLabel}>Total Exams</div>
       </div>
 
-      {/* Status chips */}
       <div style={examsWidgetStyles.grid}>
         <StatusChip label="Published" count={published} color="#10b981" />
         <StatusChip label="Ongoing" count={ongoing} color="#f59e0b" />
         <StatusChip label="Draft" count={draft} color="#6b7280" />
       </div>
 
-      {/* Recent exam */}
       {recentExam && (
         <div style={examsWidgetStyles.recentWrap}>
           <div style={examsWidgetStyles.recentLabel}>Most Recent</div>
@@ -540,6 +561,103 @@ function ExamsWidget({ total, published, ongoing, draft, recentExam }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Fee Management Widget ──────────────────────
+function FeeWidget({ summary }) {
+  const { count, billed, collected, outstanding, byStatus } = summary;
+
+  if (count === 0) {
+    return (
+      <div style={feeWidgetStyles.empty}>
+        <div style={feeWidgetStyles.emptyIcon}>💵</div>
+        <div style={feeWidgetStyles.emptyText}>No invoices yet.</div>
+        <div style={feeWidgetStyles.emptyHint}>
+          Go to Fee Management → Invoices to generate them.
+        </div>
+      </div>
+    );
+  }
+
+  const collectionRate =
+    billed > 0 ? Math.round((collected / billed) * 100) : 0;
+
+  const barColor =
+    collectionRate >= 90
+      ? '#10b981'
+      : collectionRate >= 70
+      ? '#4a72c4'
+      : collectionRate >= 50
+      ? '#f59e0b'
+      : '#dc3545';
+
+  return (
+    <div style={feeWidgetStyles.wrap}>
+      <div style={feeWidgetStyles.bigWrap}>
+        <div style={{ ...feeWidgetStyles.bigPercent, color: barColor }}>
+          {collectionRate}%
+        </div>
+        <div style={feeWidgetStyles.bigLabel}>Collection Rate</div>
+      </div>
+
+      <div style={feeWidgetStyles.barOuter}>
+        <div
+          style={{
+            ...feeWidgetStyles.barInner,
+            width: `${collectionRate}%`,
+            backgroundColor: barColor,
+          }}
+        />
+      </div>
+
+      <div style={feeWidgetStyles.amountsList}>
+        <div style={feeWidgetStyles.amountRow}>
+          <span style={feeWidgetStyles.amountLabel}>Billed</span>
+          <span style={feeWidgetStyles.amountValue}>
+            Rs {Number(billed).toLocaleString()}
+          </span>
+        </div>
+        <div style={feeWidgetStyles.amountRow}>
+          <span style={feeWidgetStyles.amountLabel}>Collected</span>
+          <span style={{ ...feeWidgetStyles.amountValue, color: '#10b981' }}>
+            Rs {Number(collected).toLocaleString()}
+          </span>
+        </div>
+        <div style={feeWidgetStyles.amountRow}>
+          <span style={feeWidgetStyles.amountLabel}>Outstanding</span>
+          <span style={{ ...feeWidgetStyles.amountValue, color: '#dc3545' }}>
+            Rs {Number(outstanding).toLocaleString()}
+          </span>
+        </div>
+      </div>
+
+      <div style={feeWidgetStyles.statusRow}>
+        <span style={feeWidgetStyles.statusPill}>
+          📄 {count} invoices
+        </span>
+        <span
+          style={{
+            ...feeWidgetStyles.statusPill,
+            backgroundColor: '#fee2e2',
+            color: '#991b1b',
+            borderColor: '#fecaca',
+          }}
+        >
+          {byStatus?.unpaid || 0} unpaid
+        </span>
+        <span
+          style={{
+            ...feeWidgetStyles.statusPill,
+            backgroundColor: '#fef3c7',
+            color: '#92400e',
+            borderColor: '#fde68a',
+          }}
+        >
+          {byStatus?.partial || 0} partial
+        </span>
+      </div>
     </div>
   );
 }
@@ -670,7 +788,7 @@ function MiniCalendar() {
   );
 }
 
-// ── Fee panel inline styles ────────────────────
+// ── Fee panel inline styles (legacy) ───────────
 const feePanelStyle = {
   display: 'flex',
   flexDirection: 'column',
@@ -705,15 +823,8 @@ const widgetStyles = {
     gap: '10px',
     paddingTop: '6px',
   },
-  bigWrap: {
-    textAlign: 'center',
-    padding: '8px 0 4px',
-  },
-  bigPercent: {
-    fontSize: '48px',
-    fontWeight: 'bold',
-    lineHeight: 1,
-  },
+  bigWrap: { textAlign: 'center', padding: '8px 0 4px' },
+  bigPercent: { fontSize: '48px', fontWeight: 'bold', lineHeight: 1 },
   bigLabel: {
     fontSize: '11px',
     color: '#6b7280',
@@ -745,24 +856,10 @@ const widgetStyles = {
     textAlign: 'center',
     marginTop: '4px',
   },
-  empty: {
-    padding: '20px 10px',
-    textAlign: 'center',
-  },
-  emptyIcon: {
-    fontSize: '32px',
-    marginBottom: '6px',
-  },
-  emptyText: {
-    fontSize: '14px',
-    fontWeight: 'bold',
-    color: '#4b5563',
-  },
-  emptyHint: {
-    fontSize: '12px',
-    color: '#9ca3af',
-    marginTop: '4px',
-  },
+  empty: { padding: '20px 10px', textAlign: 'center' },
+  emptyIcon: { fontSize: '32px', marginBottom: '6px' },
+  emptyText: { fontSize: '14px', fontWeight: 'bold', color: '#4b5563' },
+  emptyHint: { fontSize: '12px', color: '#9ca3af', marginTop: '4px' },
 };
 
 // ── Widget styles (exams) ──────────────────────
@@ -773,10 +870,7 @@ const examsWidgetStyles = {
     gap: '10px',
     paddingTop: '6px',
   },
-  bigWrap: {
-    textAlign: 'center',
-    padding: '8px 0 4px',
-  },
+  bigWrap: { textAlign: 'center', padding: '8px 0 4px' },
   bigNumber: {
     fontSize: '48px',
     fontWeight: 'bold',
@@ -838,6 +932,73 @@ const examsWidgetStyles = {
     fontWeight: 'bold',
     textTransform: 'capitalize',
     whiteSpace: 'nowrap',
+  },
+  empty: { padding: '20px 10px', textAlign: 'center' },
+  emptyIcon: { fontSize: '32px', marginBottom: '6px' },
+  emptyText: { fontSize: '14px', fontWeight: 'bold', color: '#4b5563' },
+  emptyHint: { fontSize: '12px', color: '#9ca3af', marginTop: '4px' },
+};
+
+// ── Widget styles (fee management) ─────────────
+const feeWidgetStyles = {
+  wrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    paddingTop: '6px',
+  },
+  bigWrap: { textAlign: 'center', padding: '8px 0 4px' },
+  bigPercent: { fontSize: '48px', fontWeight: 'bold', lineHeight: 1 },
+  bigLabel: {
+    fontSize: '11px',
+    color: '#6b7280',
+    marginTop: '4px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.6px',
+  },
+  barOuter: {
+    height: '8px',
+    backgroundColor: '#f1f3f5',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    marginTop: '4px',
+  },
+  barInner: {
+    height: '100%',
+    borderRadius: '4px',
+    transition: 'width 0.3s ease',
+  },
+  amountsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    marginTop: '6px',
+  },
+  amountRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '4px 0',
+    borderBottom: '1px solid #f4f6fa',
+  },
+  amountLabel: { fontSize: '12px', color: '#6b7280' },
+  amountValue: { fontSize: '13px', fontWeight: 'bold', color: '#1e2a4a' },
+  statusRow: {
+    display: 'flex',
+    gap: '6px',
+    flexWrap: 'wrap',
+    marginTop: '8px',
+    paddingTop: '8px',
+    borderTop: '1px solid #eef1f6',
+  },
+  statusPill: {
+    padding: '3px 10px',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: 'bold',
+    backgroundColor: '#eef3fb',
+    color: '#4a72c4',
+    border: '1px solid #c8e0f9',
   },
   empty: { padding: '20px 10px', textAlign: 'center' },
   emptyIcon: { fontSize: '32px', marginBottom: '6px' },

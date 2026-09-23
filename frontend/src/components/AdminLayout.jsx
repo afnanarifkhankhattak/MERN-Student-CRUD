@@ -29,11 +29,12 @@ const MENU_GROUPS = [
     ],
   },
   {
-    label: 'Finance',
-    items: [
-      { id: 'fees', label: 'Fees', icon: '💰' },
-    ],
-  },
+  label: 'Finance',
+  items: [
+    { id: 'fees-management', label: 'Fee Management', icon: '💵' },
+    { id: 'fees',            label: 'Fees (Legacy)',  icon: '💰' },
+  ],
+},
   {
     label: 'Operations',
     items: [

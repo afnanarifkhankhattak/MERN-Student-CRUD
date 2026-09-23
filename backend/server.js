@@ -10,8 +10,10 @@ const connectDB = require('./db');
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/students');
 const teacherRoutes = require('./routes/teachers');
-const feeRoutes = require('./routes/fees');
 const courseRoutes = require('./routes/courses');
+
+// ── Legacy fee route (simple amount/paid records — kept for compat) ──
+const feeRoutes = require('./routes/fees');
 
 // ── Academic Foundation routes ──────────────────
 const academicYearRoutes = require('./routes/academicYears');
@@ -29,8 +31,13 @@ const enrollmentRoutes = require('./routes/enrollments');
 // ── Attendance routes ───────────────────────────
 const attendanceRoutes = require('./routes/attendance');
 
-// ── NEW: Exam routes ────────────────────────────
+// ── Exam routes ─────────────────────────────────
 const examRoutes = require('./routes/exams');
+
+// ── NEW: Fee management routes (Phase 8) ────────
+const feeStructureRoutes = require('./routes/feeStructures');
+const feeInvoiceRoutes = require('./routes/feeInvoices');
+const feePaymentRoutes = require('./routes/feePayments');
 
 connectDB();
 
@@ -48,8 +55,10 @@ app.get('/', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/students', studentRoutes);
 app.use('/teachers', teacherRoutes);
-app.use('/fees', feeRoutes);
 app.use('/courses', courseRoutes);
+
+// ── Legacy fee mount (simple records) ───────────
+app.use('/fees', feeRoutes);
 
 // ── Academic Foundation mounts ──────────────────
 app.use('/academic-years', academicYearRoutes);
@@ -67,8 +76,13 @@ app.use('/enrollments', enrollmentRoutes);
 // ── Attendance mount ────────────────────────────
 app.use('/attendance', attendanceRoutes);
 
-// ── NEW: Exam mount ─────────────────────────────
+// ── Exam mount ──────────────────────────────────
 app.use('/exams', examRoutes);
+
+// ── NEW: Fee management mounts ──────────────────
+app.use('/fee-structures', feeStructureRoutes);
+app.use('/fee-invoices', feeInvoiceRoutes);
+app.use('/fee-payments', feePaymentRoutes);
 
 // ── Start server ────────────────────────────────
 const PORT = process.env.PORT || 5000;

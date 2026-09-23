@@ -6,9 +6,11 @@ export const API_BASE = 'https://mern-student-crud-tlt6.onrender.com';
 // ── Existing endpoints ──────────────────────────
 export const STUDENTS_URL = `${API_BASE}/students`;
 export const TEACHERS_URL = `${API_BASE}/teachers`;
-export const FEES_URL = `${API_BASE}/fees`;
 export const COURSES_URL = `${API_BASE}/courses`;
 export const AUTH_URL = `${API_BASE}/auth`;
+
+// ── Legacy fee endpoint (simple amount/paid records) ──
+export const FEES_URL = `${API_BASE}/fees`;
 
 // ── Academic Foundation endpoints ───────────────
 export const ACADEMIC_YEARS_URL = `${API_BASE}/academic-years`;
@@ -26,11 +28,15 @@ export const ENROLLMENTS_URL = `${API_BASE}/enrollments`;
 // ── Attendance endpoint ─────────────────────────
 export const ATTENDANCE_URL = `${API_BASE}/attendance`;
 
-// ── NEW: Exam endpoint ──────────────────────────
-// All exam sub-endpoints (subjects, marks-sheet, rankings, report-card)
-// are nested under this base. Compose paths like:
-//   `${EXAMS_URL}/${examId}/marks-sheet?section=${sectionId}`
+// ── Exam endpoint ───────────────────────────────
+// Sub-endpoints (subjects, marks-sheet, rankings, report-card)
+// are nested under this base.
 export const EXAMS_URL = `${API_BASE}/exams`;
+
+// ── NEW: Fee management endpoints (Phase 8) ─────
+export const FEE_STRUCTURES_URL = `${API_BASE}/fee-structures`;
+export const FEE_INVOICES_URL = `${API_BASE}/fee-invoices`;
+export const FEE_PAYMENTS_URL = `${API_BASE}/fee-payments`;
 
 // ── Token storage helpers ────────────────────────
 export const getToken = () => localStorage.getItem('token');
