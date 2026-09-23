@@ -12,7 +12,7 @@ const studentRoutes = require('./routes/students');
 const teacherRoutes = require('./routes/teachers');
 const courseRoutes = require('./routes/courses');
 
-// ── Legacy fee route (simple amount/paid records — kept for compat) ──
+// ── Legacy fee route ────────────────────────────
 const feeRoutes = require('./routes/fees');
 
 // ── Academic Foundation routes ──────────────────
@@ -34,10 +34,18 @@ const attendanceRoutes = require('./routes/attendance');
 // ── Exam routes ─────────────────────────────────
 const examRoutes = require('./routes/exams');
 
-// ── NEW: Fee management routes (Phase 8) ────────
+// ── Fee management routes ───────────────────────
 const feeStructureRoutes = require('./routes/feeStructures');
 const feeInvoiceRoutes = require('./routes/feeInvoices');
 const feePaymentRoutes = require('./routes/feePayments');
+
+// ── Accounting routes ───────────────────────────
+const expenseRoutes = require('./routes/expenses');
+const accountingRoutes = require('./routes/accounting');
+
+// ── NEW: Timetable routes (Phase 10) ────────────
+const periodRoutes = require('./routes/periods');
+const timetableRoutes = require('./routes/timetable');
 
 connectDB();
 
@@ -57,7 +65,7 @@ app.use('/students', studentRoutes);
 app.use('/teachers', teacherRoutes);
 app.use('/courses', courseRoutes);
 
-// ── Legacy fee mount (simple records) ───────────
+// ── Legacy fee mount ────────────────────────────
 app.use('/fees', feeRoutes);
 
 // ── Academic Foundation mounts ──────────────────
@@ -79,10 +87,18 @@ app.use('/attendance', attendanceRoutes);
 // ── Exam mount ──────────────────────────────────
 app.use('/exams', examRoutes);
 
-// ── NEW: Fee management mounts ──────────────────
+// ── Fee management mounts ───────────────────────
 app.use('/fee-structures', feeStructureRoutes);
 app.use('/fee-invoices', feeInvoiceRoutes);
 app.use('/fee-payments', feePaymentRoutes);
+
+// ── Accounting mounts ───────────────────────────
+app.use('/expenses', expenseRoutes);
+app.use('/accounting', accountingRoutes);
+
+// ── NEW: Timetable mounts ───────────────────────
+app.use('/periods', periodRoutes);
+app.use('/timetable', timetableRoutes);
 
 // ── Start server ────────────────────────────────
 const PORT = process.env.PORT || 5000;

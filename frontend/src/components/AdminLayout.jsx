@@ -28,22 +28,24 @@ const MENU_GROUPS = [
       { id: 'parents',  label: 'Parents',  icon: '👨‍👩‍👧' },
     ],
   },
-  {
+ {
   label: 'Finance',
   items: [
     { id: 'fees-management', label: 'Fee Management', icon: '💵' },
+    { id: 'accounting',      label: 'Accounting',     icon: '💼' },
     { id: 'fees',            label: 'Fees (Legacy)',  icon: '💰' },
   ],
 },
-  {
-    label: 'Operations',
-    items: [
-      { id: 'exams',      label: 'Exams',      icon: '📝' },
-      { id: 'attendance', label: 'Attendance', icon: '🗓️' },
-      { id: 'courses',    label: 'Courses',    icon: '📚' },
-      { id: 'calendar',   label: 'Calendar',   icon: '📅' },
-    ],
-  },
+{
+  label: 'Operations',
+  items: [
+    { id: 'exams',      label: 'Exams',      icon: '📝' },
+    { id: 'attendance', label: 'Attendance', icon: '🗓️' },
+    { id: 'timetable',  label: 'Timetable',  icon: '⏰' },
+    { id: 'courses',    label: 'Courses',    icon: '📚' },
+    { id: 'calendar',   label: 'Calendar',   icon: '📅' },
+  ],
+},
   {
     label: 'Communication',
     items: [

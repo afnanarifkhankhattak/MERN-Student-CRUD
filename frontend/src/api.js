@@ -9,7 +9,7 @@ export const TEACHERS_URL = `${API_BASE}/teachers`;
 export const COURSES_URL = `${API_BASE}/courses`;
 export const AUTH_URL = `${API_BASE}/auth`;
 
-// ── Legacy fee endpoint (simple amount/paid records) ──
+// ── Legacy fee endpoint ─────────────────────────
 export const FEES_URL = `${API_BASE}/fees`;
 
 // ── Academic Foundation endpoints ───────────────
@@ -29,14 +29,20 @@ export const ENROLLMENTS_URL = `${API_BASE}/enrollments`;
 export const ATTENDANCE_URL = `${API_BASE}/attendance`;
 
 // ── Exam endpoint ───────────────────────────────
-// Sub-endpoints (subjects, marks-sheet, rankings, report-card)
-// are nested under this base.
 export const EXAMS_URL = `${API_BASE}/exams`;
 
-// ── NEW: Fee management endpoints (Phase 8) ─────
+// ── Fee management endpoints ────────────────────
 export const FEE_STRUCTURES_URL = `${API_BASE}/fee-structures`;
 export const FEE_INVOICES_URL = `${API_BASE}/fee-invoices`;
 export const FEE_PAYMENTS_URL = `${API_BASE}/fee-payments`;
+
+// ── Accounting endpoints ────────────────────────
+export const EXPENSES_URL = `${API_BASE}/expenses`;
+export const ACCOUNTING_URL = `${API_BASE}/accounting`;
+
+// ── NEW: Timetable endpoints (Phase 10) ─────────
+export const PERIODS_URL = `${API_BASE}/periods`;
+export const TIMETABLE_URL = `${API_BASE}/timetable`;
 
 // ── Token storage helpers ────────────────────────
 export const getToken = () => localStorage.getItem('token');

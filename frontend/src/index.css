@@ -44,4 +44,25 @@
   .fee-invoice-printable button {
     display: none !important;
   }
+}/* Print styles for teacher timetable */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .teacher-timetable-printable,
+  .teacher-timetable-printable * {
+    visibility: visible;
+  }
+  .teacher-timetable-printable {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  .teacher-timetable-printable button {
+    display: none !important;
+  }
 }

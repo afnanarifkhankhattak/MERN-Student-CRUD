@@ -13,6 +13,7 @@ import {
   ATTENDANCE_URL,
   EXAMS_URL,
   FEE_INVOICES_URL,
+  ACCOUNTING_URL,
   apiFetch,
 } from '../api';
 
@@ -36,6 +37,13 @@ function DashboardPage() {
     collected: 0,
     outstanding: 0,
     byStatus: { unpaid: 0, partial: 0, paid: 0, overdue: 0, waived: 0 },
+  });
+  const [accounting, setAccounting] = useState({
+    income: 0,
+    expenses: 0,
+    net: 0,
+    incomeCount: 0,
+    expenseCount: 0,
   });
   const [todayAttendance, setTodayAttendance] = useState({
     total: 0,
@@ -64,6 +72,7 @@ function DashboardPage() {
           attendanceRes,
           examsRes,
           feeSummaryRes,
+          accountingRes,
         ] = await Promise.all([
           apiFetch(STUDENTS_URL),
           apiFetch(TEACHERS_URL),
@@ -75,6 +84,7 @@ function DashboardPage() {
           apiFetch(`${ATTENDANCE_URL}?date=${today}`),
           apiFetch(EXAMS_URL),
           apiFetch(`${FEE_INVOICES_URL}/summary`),
+          apiFetch(`${ACCOUNTING_URL}/summary`),
         ]);
 
         const sData = await studentsRes.json();
@@ -87,6 +97,7 @@ function DashboardPage() {
         const aData = await attendanceRes.json();
         const eData = await examsRes.json();
         const fsData = await feeSummaryRes.json();
+        const accData = await accountingRes.json();
 
         if (studentsRes.ok) setStudents(sData.data || []);
         if (teachersRes.ok) setTeachers(tData.data || []);
@@ -106,6 +117,16 @@ function DashboardPage() {
 
         if (feeSummaryRes.ok && fsData.data) {
           setFeeSummary(fsData.data);
+        }
+
+        if (accountingRes.ok && accData.data?.totals) {
+          setAccounting({
+            income: accData.data.totals.income || 0,
+            expenses: accData.data.totals.expenses || 0,
+            net: accData.data.totals.net || 0,
+            incomeCount: accData.data.totals.incomeCount || 0,
+            expenseCount: accData.data.totals.expenseCount || 0,
+          });
         }
 
         if (attendanceRes.ok) {
@@ -287,6 +308,15 @@ function DashboardPage() {
           <span className="panel-tag">Live</span>
         </div>
         <FeeWidget summary={feeSummary} />
+      </div>
+
+      {/* ── Accounting widget ──────────────── */}
+      <div className="panel">
+        <div className="panel-header">
+          <h3>Accounting — This Month</h3>
+          <span className="panel-tag">Live</span>
+        </div>
+        <AccountingWidget data={accounting} />
       </div>
 
       {/* ── Today's Attendance widget ──────── */}
@@ -662,7 +692,70 @@ function FeeWidget({ summary }) {
   );
 }
 
-// Small chip for the attendance mini stats
+// ── Accounting Widget ──────────────────────────
+function AccountingWidget({ data }) {
+  const { income, expenses, net, incomeCount, expenseCount } = data;
+
+  if (income === 0 && expenses === 0) {
+    return (
+      <div style={accWidgetStyles.empty}>
+        <div style={accWidgetStyles.emptyIcon}>💼</div>
+        <div style={accWidgetStyles.emptyText}>No activity this month.</div>
+        <div style={accWidgetStyles.emptyHint}>
+          Go to Accounting → Expenses to record one.
+        </div>
+      </div>
+    );
+  }
+
+  const netColor = net >= 0 ? '#10b981' : '#dc3545';
+  const totalFlow = income + expenses;
+  const netPct = totalFlow > 0 ? Math.abs(net / totalFlow) * 100 : 0;
+
+  return (
+    <div style={accWidgetStyles.wrap}>
+      <div style={accWidgetStyles.bigWrap}>
+        <div style={{ ...accWidgetStyles.bigValue, color: netColor }}>
+          {net >= 0 ? '+' : '−'} Rs {Math.abs(net).toLocaleString()}
+        </div>
+        <div style={accWidgetStyles.bigLabel}>
+          {net >= 0 ? 'Surplus' : 'Deficit'} this month
+        </div>
+      </div>
+
+      <div style={accWidgetStyles.barOuter}>
+        <div
+          style={{
+            ...accWidgetStyles.barInner,
+            width: `${netPct}%`,
+            backgroundColor: netColor,
+          }}
+        />
+      </div>
+
+      <div style={accWidgetStyles.rowsList}>
+        <div style={accWidgetStyles.row}>
+          <span style={accWidgetStyles.rowLabel}>
+            ⬆ Income ({incomeCount})
+          </span>
+          <span style={{ ...accWidgetStyles.rowValue, color: '#10b981' }}>
+            Rs {Number(income).toLocaleString()}
+          </span>
+        </div>
+        <div style={accWidgetStyles.row}>
+          <span style={accWidgetStyles.rowLabel}>
+            ⬇ Expenses ({expenseCount})
+          </span>
+          <span style={{ ...accWidgetStyles.rowValue, color: '#dc3545' }}>
+            Rs {Number(expenses).toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Small chips ────────────────────────────────
 function StatChip({ label, value, color }) {
   return (
     <div
@@ -701,7 +794,6 @@ function StatChip({ label, value, color }) {
   );
 }
 
-// Small chip for the exams status breakdown
 function StatusChip({ label, count, color }) {
   return (
     <div
@@ -817,12 +909,7 @@ const feeValueStyle = {
 
 // ── Widget styles (attendance) ─────────────────
 const widgetStyles = {
-  wrap: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    paddingTop: '6px',
-  },
+  wrap: { display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '6px' },
   bigWrap: { textAlign: 'center', padding: '8px 0 4px' },
   bigPercent: { fontSize: '48px', fontWeight: 'bold', lineHeight: 1 },
   bigLabel: {
@@ -839,11 +926,7 @@ const widgetStyles = {
     overflow: 'hidden',
     marginTop: '4px',
   },
-  barInner: {
-    height: '100%',
-    borderRadius: '4px',
-    transition: 'width 0.3s ease',
-  },
+  barInner: { height: '100%', borderRadius: '4px', transition: 'width 0.3s ease' },
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',
@@ -864,19 +947,9 @@ const widgetStyles = {
 
 // ── Widget styles (exams) ──────────────────────
 const examsWidgetStyles = {
-  wrap: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    paddingTop: '6px',
-  },
+  wrap: { display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '6px' },
   bigWrap: { textAlign: 'center', padding: '8px 0 4px' },
-  bigNumber: {
-    fontSize: '48px',
-    fontWeight: 'bold',
-    color: '#1e2a4a',
-    lineHeight: 1,
-  },
+  bigNumber: { fontSize: '48px', fontWeight: 'bold', color: '#1e2a4a', lineHeight: 1 },
   bigLabel: {
     fontSize: '11px',
     color: '#6b7280',
@@ -884,16 +957,8 @@ const examsWidgetStyles = {
     textTransform: 'uppercase',
     letterSpacing: '0.6px',
   },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '6px',
-  },
-  recentWrap: {
-    marginTop: '6px',
-    paddingTop: '10px',
-    borderTop: '1px solid #eef1f6',
-  },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' },
+  recentWrap: { marginTop: '6px', paddingTop: '10px', borderTop: '1px solid #eef1f6' },
   recentLabel: {
     fontSize: '10px',
     color: '#9ca3af',
@@ -920,11 +985,7 @@ const examsWidgetStyles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
-  recentMeta: {
-    fontSize: '11px',
-    color: '#6b7280',
-    marginTop: '2px',
-  },
+  recentMeta: { fontSize: '11px', color: '#6b7280', marginTop: '2px' },
   recentStatus: {
     padding: '3px 10px',
     borderRadius: '12px',
@@ -941,12 +1002,7 @@ const examsWidgetStyles = {
 
 // ── Widget styles (fee management) ─────────────
 const feeWidgetStyles = {
-  wrap: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    paddingTop: '6px',
-  },
+  wrap: { display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '6px' },
   bigWrap: { textAlign: 'center', padding: '8px 0 4px' },
   bigPercent: { fontSize: '48px', fontWeight: 'bold', lineHeight: 1 },
   bigLabel: {
@@ -963,11 +1019,7 @@ const feeWidgetStyles = {
     overflow: 'hidden',
     marginTop: '4px',
   },
-  barInner: {
-    height: '100%',
-    borderRadius: '4px',
-    transition: 'width 0.3s ease',
-  },
+  barInner: { height: '100%', borderRadius: '4px', transition: 'width 0.3s ease' },
   amountsList: {
     display: 'flex',
     flexDirection: 'column',
@@ -1000,6 +1052,48 @@ const feeWidgetStyles = {
     color: '#4a72c4',
     border: '1px solid #c8e0f9',
   },
+  empty: { padding: '20px 10px', textAlign: 'center' },
+  emptyIcon: { fontSize: '32px', marginBottom: '6px' },
+  emptyText: { fontSize: '14px', fontWeight: 'bold', color: '#4b5563' },
+  emptyHint: { fontSize: '12px', color: '#9ca3af', marginTop: '4px' },
+};
+
+// ── Widget styles (accounting) ─────────────────
+const accWidgetStyles = {
+  wrap: { display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '6px' },
+  bigWrap: { textAlign: 'center', padding: '8px 0 4px' },
+  bigValue: { fontSize: '32px', fontWeight: 'bold', lineHeight: 1.1 },
+  bigLabel: {
+    fontSize: '11px',
+    color: '#6b7280',
+    marginTop: '4px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.6px',
+  },
+  barOuter: {
+    height: '8px',
+    backgroundColor: '#f1f3f5',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    marginTop: '4px',
+  },
+  barInner: { height: '100%', borderRadius: '4px', transition: 'width 0.3s ease' },
+  rowsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    marginTop: '6px',
+  },
+  row: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '4px 0',
+    borderBottom: '1px solid #f4f6fa',
+    fontSize: '12px',
+  },
+  rowLabel: { color: '#6b7280' },
+  rowValue: { fontWeight: 'bold' },
   empty: { padding: '20px 10px', textAlign: 'center' },
   emptyIcon: { fontSize: '32px', marginBottom: '6px' },
   emptyText: { fontSize: '14px', fontWeight: 'bold', color: '#4b5563' },
